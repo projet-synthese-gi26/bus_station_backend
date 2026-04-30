@@ -9,6 +9,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.util.UUID;
+
 @Component
 @Slf4j
 @RequiredArgsConstructor
@@ -22,116 +24,130 @@ public class DataSeeder {
     // ─────────────────────────────────────────────
 
     // Gares
-    private static final String GARE_1 = "aa000000-0000-0000-0000-000000000001"; // Mvan Yaoundé
-    private static final String GARE_2 = "aa000000-0000-0000-0000-000000000002"; // Lac Municipal Yaoundé
-    private static final String GARE_3 = "aa000000-0000-0000-0000-000000000003"; // Bonabéri Douala
-    private static final String GARE_4 = "aa000000-0000-0000-0000-000000000004"; // Bessengué Douala
-    private static final String GARE_5 = "aa000000-0000-0000-0000-000000000005"; // Bafoussam
+    private static final UUID GARE_1 = UUID.fromString("bb000002-0000-0000-0000-000000000001"); // Mvan Yaoundé
+    private static final UUID GARE_2 = UUID.fromString("bb000002-0000-0000-0000-000000000002"); // Lac Municipal Yaoundé
+    private static final UUID GARE_3 = UUID.fromString("bb000002-0000-0000-0000-000000000003"); // Bonabéri Douala
+    private static final UUID GARE_4 = UUID.fromString("bb000002-0000-0000-0000-000000000004"); // Bessengué Douala
+    private static final UUID GARE_5 = UUID.fromString("bb000002-0000-0000-0000-000000000005"); // Bafoussam
 
     // Organisations
-    private static final String ORG_1 = "bb000000-0000-0000-0000-000000000001";
-    private static final String ORG_2 = "bb000000-0000-0000-0000-000000000002";
-    private static final String ORG_3 = "bb000000-0000-0000-0000-000000000003";
-    private static final String ORG_4 = "bb000000-0000-0000-0000-000000000004";
+    private static final UUID ORG_1 = UUID.fromString("cc000003-0000-0000-0000-000000000001");
+    private static final UUID ORG_2 = UUID.fromString("cc000003-0000-0000-0000-000000000002");
+    private static final UUID ORG_3 = UUID.fromString("cc000003-0000-0000-0000-000000000003");
+    private static final UUID ORG_4 = UUID.fromString("cc000003-0000-0000-0000-000000000004");
 
     // Agences
-    private static final String AGENCY_1 = "cc000000-0000-0000-0000-000000000001";
-    private static final String AGENCY_2 = "cc000000-0000-0000-0000-000000000002";
-    private static final String AGENCY_3 = "cc000000-0000-0000-0000-000000000003";
-    private static final String AGENCY_4 = "cc000000-0000-0000-0000-000000000004";
+    private static final UUID AGENCY_1 = UUID.fromString("dd000004-0000-0000-0000-000000000001");
+    private static final UUID AGENCY_2 = UUID.fromString("dd000004-0000-0000-0000-000000000002");
+    private static final UUID AGENCY_3 = UUID.fromString("dd000004-0000-0000-0000-000000000003");
+    private static final UUID AGENCY_4 = UUID.fromString("dd000004-0000-0000-0000-000000000004");
 
     // Users BSM
-    private static final String USER_BSM_1 = "dd000000-0000-0000-0000-000000000001";
-    private static final String USER_BSM_2 = "dd000000-0000-0000-0000-000000000002";
+    private static final UUID USER_BSM_1 = UUID.fromString("aa000001-0000-0000-0000-000000000001");
+    private static final UUID USER_BSM_2 = UUID.fromString("aa000001-0000-0000-0000-000000000002");
 
     // Users responsables agences
-    private static final String USER_RESP_1 = "dd000000-0000-0000-0000-000000000011";
-    private static final String USER_RESP_2 = "dd000000-0000-0000-0000-000000000012";
-    private static final String USER_RESP_3 = "dd000000-0000-0000-0000-000000000013";
-    private static final String USER_RESP_4 = "dd000000-0000-0000-0000-000000000014";
+    private static final UUID USER_RESP_1 = UUID.fromString("aa000001-0000-0000-0000-000000000011");
+    private static final UUID USER_RESP_2 = UUID.fromString("aa000001-0000-0000-0000-000000000012");
+    private static final UUID USER_RESP_3 = UUID.fromString("aa000001-0000-0000-0000-000000000013");
+    private static final UUID USER_RESP_4 = UUID.fromString("aa000001-0000-0000-0000-000000000014");
 
     // Users clients
-    private static final String USER_CLIENT_1 = "dd000000-0000-0000-0000-000000000021";
-    private static final String USER_CLIENT_2 = "dd000000-0000-0000-0000-000000000022";
-    private static final String USER_CLIENT_3 = "dd000000-0000-0000-0000-000000000023";
+    private static final UUID USER_CLIENT_1 = UUID.fromString("aa000001-0000-0000-0000-000000000021");
+    private static final UUID USER_CLIENT_2 = UUID.fromString("aa000001-0000-0000-0000-000000000022");
+    private static final UUID USER_CLIENT_3 = UUID.fromString("aa000001-0000-0000-0000-000000000023");
 
     // Chauffeurs / Employés
-    private static final String USER_CHAUFF_1  = "dd000000-0000-0000-0000-000000000031"; // agency-001
-    private static final String USER_CHAUFF_2  = "dd000000-0000-0000-0000-000000000032"; // agency-001
-    private static final String USER_CHAUFF_3  = "dd000000-0000-0000-0000-000000000033"; // agency-001
-    private static final String USER_EMP_4     = "dd000000-0000-0000-0000-000000000034"; // agency-001 caissière
-    private static final String USER_CHAUFF_4  = "dd000000-0000-0000-0000-000000000035"; // agency-002
-    private static final String USER_CHAUFF_5  = "dd000000-0000-0000-0000-000000000036"; // agency-002
-    private static final String USER_CHAUFF_7  = "dd000000-0000-0000-0000-000000000037"; // agency-003
-    private static final String USER_CHAUFF_8  = "dd000000-0000-0000-0000-000000000038"; // agency-003
-    private static final String USER_CHAUFF_10 = "dd000000-0000-0000-0000-000000000040"; // agency-004
+    private static final UUID USER_CHAUFF_1  = UUID.fromString("aa000001-0000-0000-0000-000000000031"); // agency-001
+    private static final UUID USER_CHAUFF_2  = UUID.fromString("aa000001-0000-0000-0000-000000000032"); // agency-001
+    private static final UUID USER_CHAUFF_3  = UUID.fromString("aa000001-0000-0000-0000-000000000033"); // agency-001
+    private static final UUID USER_EMP_4     = UUID.fromString("aa000001-0000-0000-0000-000000000034"); // agency-001 caissière
+    private static final UUID USER_CHAUFF_4  = UUID.fromString("aa000001-0000-0000-0000-000000000035"); // agency-002
+    private static final UUID USER_CHAUFF_5  = UUID.fromString("aa000001-0000-0000-0000-000000000036"); // agency-002
+    private static final UUID USER_CHAUFF_7  = UUID.fromString("aa000001-0000-0000-0000-000000000037"); // agency-003
+    private static final UUID USER_CHAUFF_8  = UUID.fromString("aa000001-0000-0000-0000-000000000038"); // agency-003
+    private static final UUID USER_CHAUFF_10 = UUID.fromString("aa000001-0000-0000-0000-000000000040"); // agency-004
 
     // Véhicules
-    private static final String VEH_1  = "ee000000-0000-0000-0000-000000000001";
-    private static final String VEH_2  = "ee000000-0000-0000-0000-000000000002";
-    private static final String VEH_3  = "ee000000-0000-0000-0000-000000000003";
-    private static final String VEH_4  = "ee000000-0000-0000-0000-000000000004";
-    private static final String VEH_5  = "ee000000-0000-0000-0000-000000000005";
-    private static final String VEH_6  = "ee000000-0000-0000-0000-000000000006";
-    private static final String VEH_7  = "ee000000-0000-0000-0000-000000000007";
-    private static final String VEH_8  = "ee000000-0000-0000-0000-000000000008";
-    private static final String VEH_9  = "ee000000-0000-0000-0000-000000000009";
-    private static final String VEH_10 = "ee000000-0000-0000-0000-000000000010";
-    private static final String VEH_11 = "ee000000-0000-0000-0000-000000000011";
-    private static final String VEH_13 = "ee000000-0000-0000-0000-000000000013";
-    private static final String VEH_14 = "ee000000-0000-0000-0000-000000000014";
+    private static final UUID VEH_1  = UUID.fromString("ee000005-0000-0000-0000-000000000001");
+    private static final UUID VEH_2  = UUID.fromString("ee000005-0000-0000-0000-000000000002");
+    private static final UUID VEH_3  = UUID.fromString("ee000005-0000-0000-0000-000000000003");
+    private static final UUID VEH_4  = UUID.fromString("ee000005-0000-0000-0000-000000000004");
+    private static final UUID VEH_5  = UUID.fromString("ee000005-0000-0000-0000-000000000005");
+    private static final UUID VEH_6  = UUID.fromString("ee000005-0000-0000-0000-000000000006");
+    private static final UUID VEH_7  = UUID.fromString("ee000005-0000-0000-0000-000000000007");
+    private static final UUID VEH_8  = UUID.fromString("ee000005-0000-0000-0000-000000000008");
+    private static final UUID VEH_9  = UUID.fromString("ee000005-0000-0000-0000-000000000009");
+    private static final UUID VEH_10 = UUID.fromString("ee000005-0000-0000-0000-000000000010");
+    private static final UUID VEH_11 = UUID.fromString("ee000005-0000-0000-0000-000000000011");
+    private static final UUID VEH_13 = UUID.fromString("ee000005-0000-0000-0000-000000000013");
+    private static final UUID VEH_14 = UUID.fromString("ee000005-0000-0000-0000-000000000014");
 
     // Classes voyage
-    private static final String CL_1  = "ff000000-0000-0000-0000-000000000001"; // GE Classique 6000
-    private static final String CL_2  = "ff000000-0000-0000-0000-000000000002"; // GE Confort 8500
-    private static final String CL_3  = "ff000000-0000-0000-0000-000000000003"; // GE Express 7500
-    private static final String CL_4  = "ff000000-0000-0000-0000-000000000004"; // GE Nuit Confort 9000
-    private static final String CL_5  = "ff000000-0000-0000-0000-000000000005"; // TE VIP Standard 15000
-    private static final String CL_6  = "ff000000-0000-0000-0000-000000000006"; // TE VIP Premium 22000
-    private static final String CL_7  = "ff000000-0000-0000-0000-000000000007"; // TE Business Class 35000
-    private static final String CL_8  = "ff000000-0000-0000-0000-000000000008"; // BTU Classique 5000
-    private static final String CL_9  = "ff000000-0000-0000-0000-000000000009"; // BTU Rapide 6500
-    private static final String CL_10 = "ff000000-0000-0000-0000-000000000010"; // CL Standard 4500
-    private static final String CL_11 = "ff000000-0000-0000-0000-000000000011"; // CL Confort 6000
+    private static final UUID CL_1  = UUID.fromString("ff000007-0000-0000-0000-000000000001"); // GE Classique 6000
+    private static final UUID CL_2  = UUID.fromString("ff000007-0000-0000-0000-000000000002"); // GE Confort 8500
+    private static final UUID CL_3  = UUID.fromString("ff000007-0000-0000-0000-000000000003"); // GE Express 7500
+    private static final UUID CL_4  = UUID.fromString("ff000007-0000-0000-0000-000000000004"); // GE Nuit Confort 9000
+    private static final UUID CL_5  = UUID.fromString("ff000007-0000-0000-0000-000000000005"); // TE VIP Standard 15000
+    private static final UUID CL_6  = UUID.fromString("ff000007-0000-0000-0000-000000000006"); // TE VIP Premium 22000
+    private static final UUID CL_7  = UUID.fromString("ff000007-0000-0000-0000-000000000007"); // TE Business Class 35000
+    private static final UUID CL_8  = UUID.fromString("ff000007-0000-0000-0000-000000000008"); // BTU Classique 5000
+    private static final UUID CL_9  = UUID.fromString("ff000007-0000-0000-0000-000000000009"); // BTU Rapide 6500
+    private static final UUID CL_10 = UUID.fromString("ff000007-0000-0000-0000-000000000010"); // CL Standard 4500
+    private static final UUID CL_11 = UUID.fromString("ff000007-0000-0000-0000-000000000011"); // CL Confort 6000
 
     // Voyages
-    private static final String VOY_1 = "11000000-0000-0000-0000-000000000001";
-    private static final String VOY_2 = "11000000-0000-0000-0000-000000000002";
-    private static final String VOY_3 = "11000000-0000-0000-0000-000000000003";
-    private static final String VOY_4 = "11000000-0000-0000-0000-000000000004";
-    private static final String VOY_5 = "11000000-0000-0000-0000-000000000005";
-    private static final String VOY_6 = "11000000-0000-0000-0000-000000000006";
-    private static final String VOY_7 = "11000000-0000-0000-0000-000000000007";
-    private static final String VOY_8 = "11000000-0000-0000-0000-000000000008";
+    private static final UUID VOY_1 = UUID.fromString("11000008-0000-0000-0000-000000000001");
+    private static final UUID VOY_2 = UUID.fromString("11000008-0000-0000-0000-000000000002");
+    private static final UUID VOY_3 = UUID.fromString("11000008-0000-0000-0000-000000000003");
+    private static final UUID VOY_4 = UUID.fromString("11000008-0000-0000-0000-000000000004");
+    private static final UUID VOY_5 = UUID.fromString("11000008-0000-0000-0000-000000000005");
+    private static final UUID VOY_6 = UUID.fromString("11000008-0000-0000-0000-000000000006");
+    private static final UUID VOY_7 = UUID.fromString("11000008-0000-0000-0000-000000000007");
+    private static final UUID VOY_8 = UUID.fromString("11000008-0000-0000-0000-000000000008");
 
     // Lignes voyage
-    private static final String LIGNE_1 = "22000000-0000-0000-0000-000000000001";
-    private static final String LIGNE_2 = "22000000-0000-0000-0000-000000000002";
-    private static final String LIGNE_3 = "22000000-0000-0000-0000-000000000003";
-    private static final String LIGNE_4 = "22000000-0000-0000-0000-000000000004";
-    private static final String LIGNE_5 = "22000000-0000-0000-0000-000000000005";
-    private static final String LIGNE_6 = "22000000-0000-0000-0000-000000000006";
-    private static final String LIGNE_7 = "22000000-0000-0000-0000-000000000007";
-    private static final String LIGNE_8 = "22000000-0000-0000-0000-000000000008";
+    private static final UUID LIGNE_1 = UUID.fromString("22000009-0000-0000-0000-000000000001");
+    private static final UUID LIGNE_2 = UUID.fromString("22000009-0000-0000-0000-000000000002");
+    private static final UUID LIGNE_3 = UUID.fromString("22000009-0000-0000-0000-000000000003");
+    private static final UUID LIGNE_4 = UUID.fromString("22000009-0000-0000-0000-000000000004");
+    private static final UUID LIGNE_5 = UUID.fromString("22000009-0000-0000-0000-000000000005");
+    private static final UUID LIGNE_6 = UUID.fromString("22000009-0000-0000-0000-000000000006");
+    private static final UUID LIGNE_7 = UUID.fromString("22000009-0000-0000-0000-000000000007");
+    private static final UUID LIGNE_8 = UUID.fromString("22000009-0000-0000-0000-000000000008");
+
+    // Employés
+    private static final UUID EMP_1 = UUID.fromString("ee100001-0000-0000-0000-000000000004");
+
+    // Chauffeurs
+    private static final UUID CHAUFF_1 = UUID.fromString("cf000006-0000-0000-0000-000000000001");
+    private static final UUID CHAUFF_2 = UUID.fromString("cf000006-0000-0000-0000-000000000002");
+    private static final UUID CHAUFF_3 = UUID.fromString("cf000006-0000-0000-0000-000000000003");
+    private static final UUID CHAUFF_4 = UUID.fromString("cf000006-0000-0000-0000-000000000004");
+    private static final UUID CHAUFF_5 = UUID.fromString("cf000006-0000-0000-0000-000000000005");
+    private static final UUID CHAUFF_7 = UUID.fromString("cf000006-0000-0000-0000-000000000006");
+    private static final UUID CHAUFF_8 = UUID.fromString("cf000006-0000-0000-0000-000000000007");
+    private static final UUID CHAUFF_10 = UUID.fromString("cf000006-0000-0000-0000-000000000008");
 
     // Affiliations
-    private static final String AFF_1 = "33000000-0000-0000-0000-000000000001"; // agency-001 → gare-1
-    private static final String AFF_2 = "33000000-0000-0000-0000-000000000002"; // agency-002 → gare-4
-    private static final String AFF_3 = "33000000-0000-0000-0000-000000000003"; // agency-003 → gare-5
-    private static final String AFF_4 = "33000000-0000-0000-0000-000000000004"; // agency-004 → gare-2
-    private static final String AFF_5 = "33000000-0000-0000-0000-000000000005"; // agency-001 → gare-4
+    private static final UUID AFF_1 = UUID.fromString("33000010-0000-0000-0000-000000000001"); // agency-001 → gare-1
+    private static final UUID AFF_2 = UUID.fromString("33000010-0000-0000-0000-000000000002"); // agency-002 → gare-4
+    private static final UUID AFF_3 = UUID.fromString("33000010-0000-0000-0000-000000000003"); // agency-003 → gare-5
+    private static final UUID AFF_4 = UUID.fromString("33000010-0000-0000-0000-000000000004"); // agency-004 → gare-2
+    private static final UUID AFF_5 = UUID.fromString("33000010-0000-0000-0000-000000000005"); // agency-001 → gare-4
 
     // Politique et taxes (gare)
-    private static final String POL_1 = "44000000-0000-0000-0000-000000000001";
-    private static final String POL_2 = "44000000-0000-0000-0000-000000000002";
-    private static final String POL_3 = "44000000-0000-0000-0000-000000000003";
-    private static final String POL_4 = "44000000-0000-0000-0000-000000000004";
-    private static final String POL_5 = "44000000-0000-0000-0000-000000000005";
+    private static final UUID POL_1 = UUID.fromString("44000011-0000-0000-0000-000000000001");
+    private static final UUID POL_2 = UUID.fromString("44000011-0000-0000-0000-000000000002");
+    private static final UUID POL_3 = UUID.fromString("44000011-0000-0000-0000-000000000003");
+    private static final UUID POL_4 = UUID.fromString("44000011-0000-0000-0000-000000000004");
+    private static final UUID POL_5 = UUID.fromString("44000011-0000-0000-0000-000000000005");
 
     // Alertes
-    private static final String ALERTE_1 = "55000000-0000-0000-0000-000000000001";
-    private static final String ALERTE_2 = "55000000-0000-0000-0000-000000000002";
-    private static final String ALERTE_3 = "55000000-0000-0000-0000-000000000003";
+    private static final UUID ALERTE_1 = UUID.fromString("55000012-0000-0000-0000-000000000001");
+    private static final UUID ALERTE_2 = UUID.fromString("55000012-0000-0000-0000-000000000002");
+    private static final UUID ALERTE_3 = UUID.fromString("55000012-0000-0000-0000-000000000003");
+
 
     // ─────────────────────────────────────────────
     // Point d'entrée
@@ -139,7 +155,7 @@ public class DataSeeder {
 
     @EventListener(ApplicationReadyEvent.class)
     public void seed() {
-        db.sql("SELECT COUNT(*) FROM users WHERE user_id = '" + USER_BSM_1 + "'")
+        db.sql("SELECT COUNT(*) FROM users WHERE user_id = :id").bind("id", USER_BSM_1)
                 .map((row, meta) -> row.get(0, Long.class))
                 .one()
                 .defaultIfEmpty(0L)
@@ -158,13 +174,14 @@ public class DataSeeder {
     }
 
     private Mono<Void> runAll(String pwd) {
-        return seedGares()
+        return seedUsers(pwd)
                 .then(seedOrganisations())
-                .then(seedUsers(pwd))
+                .then(seedGares())
                 .then(seedAgences())
                 .then(seedVehicules())
-                .then(seedClassVoyage())
+                .then(seedChauffeurs())
                 .then(seedEmployes())
+                .then(seedClassVoyage())
                 .then(seedVoyages())
                 .then(seedLignesVoyage())
                 .then(seedAffiliations())
@@ -237,71 +254,71 @@ public class DataSeeder {
     private Mono<Void> seedUsers(String pwd) {
         String sql = """
             INSERT INTO users
-              (user_id, username, first_name, last_name, email, phone_number, password, roles, gender, age, version)
+              (user_id, username, prenom, nom, email, tel_number, password, roles, genre)
             VALUES
-              (:id, :username, :first, :last, :email, :phone, :pwd, :roles, :gender, :age, 0)
-            ON CONFLICT (user_id) DO NOTHING
+              (:id, :username, :first, :last, :email, :phone, :pwd, :roles, :gender)
+            ON CONFLICT (username) DO NOTHING
             """;
 
         return
             // BSM
             db.sql(sql).bind("id", USER_BSM_1).bind("username", "bsm_mvan").bind("first", "Émile")
                 .bind("last", "FOUDA NKOLO").bind("email", "e.fouda@gare-mvan.cm").bind("phone", "222305060")
-                .bind("pwd", pwd).bind("roles", "BUS_STATION_MANAGER").bind("gender", "MALE").bind("age", 55).then()
+                .bind("pwd", pwd).bind("roles", "BUS_STATION_MANAGER").bind("gender", "MALE").then()
             .then(db.sql(sql).bind("id", USER_BSM_2).bind("username", "bsm_lac").bind("first", "Cécile")
                 .bind("last", "ABENA MANGA").bind("email", "c.abena@gare-lac.cm").bind("phone", "222312020")
-                .bind("pwd", pwd).bind("roles", "BUS_STATION_MANAGER").bind("gender", "FEMALE").bind("age", 48).then())
+                .bind("pwd", pwd).bind("roles", "BUS_STATION_MANAGER").bind("gender", "FEMALE").then())
             // Responsables agences
             .then(db.sql(sql).bind("id", USER_RESP_1).bind("username", "nkongo_theo").bind("first", "Théodore")
                 .bind("last", "NKONGO").bind("email", "t.nkongo@generalexpress.cm").bind("phone", "655001122")
-                .bind("pwd", pwd).bind("roles", "AGENCE_VOYAGE").bind("gender", "MALE").bind("age", 47).then())
+                .bind("pwd", pwd).bind("roles", "AGENCE_VOYAGE").bind("gender", "MALE").then())
             .then(db.sql(sql).bind("id", USER_RESP_2).bind("username", "sandrine_te").bind("first", "Sandrine")
                 .bind("last", "MOUKOURI").bind("email", "s.moukouri@touristiqueexpress.cm").bind("phone", "655778899")
-                .bind("pwd", pwd).bind("roles", "AGENCE_VOYAGE").bind("gender", "FEMALE").bind("age", 42).then())
+                .bind("pwd", pwd).bind("roles", "AGENCE_VOYAGE").bind("gender", "FEMALE").then())
             .then(db.sql(sql).bind("id", USER_RESP_3).bind("username", "fotso_btu").bind("first", "Boniface")
                 .bind("last", "FOTSO").bind("email", "b.fotso@btu-transport.cm").bind("phone", "656445566")
-                .bind("pwd", pwd).bind("roles", "AGENCE_VOYAGE").bind("gender", "MALE").bind("age", 52).then())
+                .bind("pwd", pwd).bind("roles", "AGENCE_VOYAGE").bind("gender", "MALE").then())
             .then(db.sql(sql).bind("id", USER_RESP_4).bind("username", "patricia_cl").bind("first", "Patricia")
                 .bind("last", "OWONA").bind("email", "p.owona@confortlines.cm").bind("phone", "654223344")
-                .bind("pwd", pwd).bind("roles", "AGENCE_VOYAGE").bind("gender", "FEMALE").bind("age", 38).then())
+                .bind("pwd", pwd).bind("roles", "AGENCE_VOYAGE").bind("gender", "FEMALE").then())
             // Clients
             .then(db.sql(sql).bind("id", USER_CLIENT_1).bind("username", "paul_mvondo").bind("first", "Paul")
                 .bind("last", "MVONDO").bind("email", "paul.mvondo@gmail.com").bind("phone", "677112233")
-                .bind("pwd", pwd).bind("roles", "USAGER").bind("gender", "MALE").bind("age", 29).then())
+                .bind("pwd", pwd).bind("roles", "USAGER").bind("gender", "MALE").then())
             .then(db.sql(sql).bind("id", USER_CLIENT_2).bind("username", "mc_ngono").bind("first", "Marie-Claire")
                 .bind("last", "NGONO").bind("email", "mc.ngono@yahoo.fr").bind("phone", "699887766")
-                .bind("pwd", pwd).bind("roles", "USAGER").bind("gender", "FEMALE").bind("age", 34).then())
+                .bind("pwd", pwd).bind("roles", "USAGER").bind("gender", "FEMALE").then())
             .then(db.sql(sql).bind("id", USER_CLIENT_3).bind("username", "ibrahim_b").bind("first", "Ibrahim")
                 .bind("last", "BELLO").bind("email", "ibrahim.bello@gmail.com").bind("phone", "676543210")
-                .bind("pwd", pwd).bind("roles", "USAGER").bind("gender", "MALE").bind("age", 25).then())
+                .bind("pwd", pwd).bind("roles", "USAGER").bind("gender", "MALE").then())
             // Chauffeurs & Employés (rôle EMPLOYE)
             .then(db.sql(sql).bind("id", USER_CHAUFF_1).bind("username", "chauffeur_jp").bind("first", "Jean-Pierre")
                 .bind("last", "MBARGA").bind("email", "jp.mbarga@generalexpress.cm").bind("phone", "655341122")
-                .bind("pwd", pwd).bind("roles", "EMPLOYE").bind("gender", "MALE").bind("age", 45).then())
+                .bind("pwd", pwd).bind("roles", "EMPLOYE").bind("gender", "MALE").then())
             .then(db.sql(sql).bind("id", USER_CHAUFF_2).bind("username", "chauffeur_herve").bind("first", "Hervé")
                 .bind("last", "ESSOMBA").bind("email", "h.essomba@generalexpress.cm").bind("phone", "655560033")
-                .bind("pwd", pwd).bind("roles", "EMPLOYE").bind("gender", "MALE").bind("age", 38).then())
+                .bind("pwd", pwd).bind("roles", "EMPLOYE").bind("gender", "MALE").then())
             .then(db.sql(sql).bind("id", USER_CHAUFF_3).bind("username", "chauffeur_serge").bind("first", "Serge")
                 .bind("last", "ATEBA").bind("email", "s.ateba@generalexpress.cm").bind("phone", "655789900")
-                .bind("pwd", pwd).bind("roles", "EMPLOYE").bind("gender", "MALE").bind("age", 41).then())
+                .bind("pwd", pwd).bind("roles", "EMPLOYE").bind("gender", "MALE").then())
             .then(db.sql(sql).bind("id", USER_EMP_4).bind("username", "belibi_christelle").bind("first", "Christelle")
                 .bind("last", "BELIBI").bind("email", "c.belibi@generalexpress.cm").bind("phone", "655110022")
-                .bind("pwd", pwd).bind("roles", "EMPLOYE").bind("gender", "FEMALE").bind("age", 30).then())
+                .bind("pwd", pwd).bind("roles", "EMPLOYE").bind("gender", "FEMALE").then())
             .then(db.sql(sql).bind("id", USER_CHAUFF_4).bind("username", "chauffeur_pierre").bind("first", "Pierre")
                 .bind("last", "ABENA").bind("email", "p.abena@touristiqueexpress.cm").bind("phone", "655001199")
-                .bind("pwd", pwd).bind("roles", "EMPLOYE").bind("gender", "MALE").bind("age", 50).then())
+                .bind("pwd", pwd).bind("roles", "EMPLOYE").bind("gender", "MALE").then())
             .then(db.sql(sql).bind("id", USER_CHAUFF_5).bind("username", "chauffeur_paul").bind("first", "Paul")
                 .bind("last", "NGUEMA").bind("email", "p.nguema@touristiqueexpress.cm").bind("phone", "655223300")
-                .bind("pwd", pwd).bind("roles", "EMPLOYE").bind("gender", "MALE").bind("age", 44).then())
+                .bind("pwd", pwd).bind("roles", "EMPLOYE").bind("gender", "MALE").then())
             .then(db.sql(sql).bind("id", USER_CHAUFF_7).bind("username", "chauffeur_aristide").bind("first", "Aristide")
                 .bind("last", "KAMGA").bind("email", "a.kamga@btu-transport.cm").bind("phone", "656112233")
-                .bind("pwd", pwd).bind("roles", "EMPLOYE").bind("gender", "MALE").bind("age", 39).then())
+                .bind("pwd", pwd).bind("roles", "EMPLOYE").bind("gender", "MALE").then())
             .then(db.sql(sql).bind("id", USER_CHAUFF_8).bind("username", "chauffeur_roger").bind("first", "Roger")
                 .bind("last", "TIENTCHEU").bind("email", "r.tientcheu@btu-transport.cm").bind("phone", "656445566")
-                .bind("pwd", pwd).bind("roles", "EMPLOYE").bind("gender", "MALE").bind("age", 46).then())
+                .bind("pwd", pwd).bind("roles", "EMPLOYE").bind("gender", "MALE").then())
             .then(db.sql(sql).bind("id", USER_CHAUFF_10).bind("username", "chauffeur_eric").bind("first", "Eric")
                 .bind("last", "ZAMBO").bind("email", "e.zambo@confortlines.cm").bind("phone", "654334455")
-                .bind("pwd", pwd).bind("roles", "EMPLOYE").bind("gender", "MALE").bind("age", 35).then())
+                .bind("pwd", pwd).bind("roles", "EMPLOYE").bind("gender", "MALE").then())
             .doOnSuccess(v -> log.info("  ✔ Utilisateurs insérés (20)"));
     }
 
@@ -315,7 +332,7 @@ public class DataSeeder {
                gare_routiere_id, moyens_paiement, vehicule_id_defaut, chauffeur_id_defaut, version)
             VALUES
               (:id, :orgId, :userId, :name, :shortName, :location, true,
-               :gareId, :moyens, :vehId, :chauffId, 0)
+               :gareId, CAST(:moyens AS jsonb), :vehId, :chauffId, 0)
             ON CONFLICT (agency_id) DO NOTHING
             """;
 
@@ -352,71 +369,69 @@ public class DataSeeder {
     private Mono<Void> seedVehicules() {
         String sql = """
             INSERT INTO vehicules
-              (id_vehicule, nom, modele, marque, nbr_places, id_agence_voyage,
-               description, plaque_matricule, annee_fabrication, poids_bagage, vitesse, disponible)
+              (id_vehicule, nom, modele, description, nbr_places, plaque_matricule, lien_photo, id_agence_voyage)
             VALUES
-              (:id, :nom, :modele, :marque, :places, :agenceId,
-               :desc, :plaque, :annee, :poids, :vitesse, :dispo)
+              (:id, :nom, :modele, :desc, :places, :plaque, :photo, :agenceId)
             ON CONFLICT (id_vehicule) DO NOTHING
             """;
 
         return
             // Agency 1
             db.sql(sql).bind("id", VEH_1).bind("nom", "Grand Bus GE-01").bind("modele", "Yutong ZK6122H9")
-                .bind("marque", "Yutong").bind("places", 70).bind("agenceId", AGENCY_1)
+                .bind("places", 70).bind("agenceId", AGENCY_1)
                 .bind("desc", "Grand bus 70 places, climatisé, USB, écrans individuels.")
-                .bind("plaque", "LT-7823-CM").bind("annee", "2021").bind("poids", 30.0).bind("vitesse", 120.0).bind("dispo", 1).then()
+                .bind("plaque", "LT-7823-CM").bind("photo", "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400").then()
             .then(db.sql(sql).bind("id", VEH_2).bind("nom", "Bus GE-02 Classique").bind("modele", "King Long XMQ6127J")
-                .bind("marque", "King Long").bind("places", 55).bind("agenceId", AGENCY_1)
+                .bind("places", 55).bind("agenceId", AGENCY_1)
                 .bind("desc", "Bus 55 places, climatisé, idéal pour l'axe Yaoundé–Douala.")
-                .bind("plaque", "LT-4456-CM").bind("annee", "2019").bind("poids", 25.0).bind("vitesse", 110.0).bind("dispo", 1).then())
+                .bind("plaque", "LT-4456-CM").bind("photo", "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=400").then())
             .then(db.sql(sql).bind("id", VEH_3).bind("nom", "Minibus GE-03 Express").bind("modele", "Toyota Hiace GL")
-                .bind("marque", "Toyota").bind("places", 18).bind("agenceId", AGENCY_1)
+                .bind("places", 18).bind("agenceId", AGENCY_1)
                 .bind("desc", "Minibus 18 places, express Yaoundé–Douala en 3h.")
-                .bind("plaque", "LT-1102-CM").bind("annee", "2022").bind("poids", 20.0).bind("vitesse", 130.0).bind("dispo", 1).then())
+                .bind("plaque", "LT-1102-CM").bind("photo", "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400").then())
             .then(db.sql(sql).bind("id", VEH_4).bind("nom", "Bus GE-04 Nuit").bind("modele", "Higer KLQ6119Q")
-                .bind("marque", "Higer").bind("places", 45).bind("agenceId", AGENCY_1)
+                .bind("places", 45).bind("agenceId", AGENCY_1)
                 .bind("desc", "Bus nuit 45 places, sièges inclinables 160°, couvertures fournies.")
-                .bind("plaque", "LT-9908-CM").bind("annee", "2020").bind("poids", 30.0).bind("vitesse", 100.0).bind("dispo", 1).then())
+                .bind("plaque", "LT-9908-CM").bind("photo", "https://images.unsplash.com/photo-1494515843206-f3117d3f51b7?w=400").then())
             // Agency 2
             .then(db.sql(sql).bind("id", VEH_5).bind("nom", "VIP Coach TE-01").bind("modele", "Mercedes-Benz Travego")
-                .bind("marque", "Mercedes-Benz").bind("places", 30).bind("agenceId", AGENCY_2)
+                .bind("places", 30).bind("agenceId", AGENCY_2)
                 .bind("desc", "Coach grand tourisme 30 places VIP, sièges cuir, Wi-Fi, toilettes à bord.")
-                .bind("plaque", "LT-0055-CM").bind("annee", "2023").bind("poids", 25.0).bind("vitesse", 130.0).bind("dispo", 1).then())
+                .bind("plaque", "LT-0055-CM").bind("photo", "https://images.unsplash.com/photo-1557223562-6c77ef16210f?w=400").then())
             .then(db.sql(sql).bind("id", VEH_6).bind("nom", "VIP Premium TE-02").bind("modele", "Volvo 9700")
-                .bind("marque", "Volvo").bind("places", 35).bind("agenceId", AGENCY_2)
+                .bind("places", 35).bind("agenceId", AGENCY_2)
                 .bind("desc", "Bus premium 35 places, double deck, panoramique, climatisation individuelle.")
-                .bind("plaque", "LT-2277-CM").bind("annee", "2022").bind("poids", 30.0).bind("vitesse", 120.0).bind("dispo", 1).then())
+                .bind("plaque", "LT-2277-CM").bind("photo", "https://images.unsplash.com/photo-1557223562-6c77ef16210f?w=400").then())
             .then(db.sql(sql).bind("id", VEH_7).bind("nom", "Minibus TE-03 Affaires").bind("modele", "Mercedes-Benz Sprinter 519")
-                .bind("marque", "Mercedes-Benz").bind("places", 16).bind("agenceId", AGENCY_2)
+                .bind("places", 16).bind("agenceId", AGENCY_2)
                 .bind("desc", "Minibus affaires 16 places, sièges cuir, tablettes individuelles, Wi-Fi.")
-                .bind("plaque", "LT-6643-CM").bind("annee", "2023").bind("poids", 20.0).bind("vitesse", 140.0).bind("dispo", 1).then())
+                .bind("plaque", "LT-6643-CM").bind("photo", "https://images.unsplash.com/photo-1557223562-6c77ef16210f?w=400").then())
             .then(db.sql(sql).bind("id", VEH_8).bind("nom", "Touristic TE-04 Tour").bind("modele", "Irizar i8")
-                .bind("marque", "Irizar").bind("places", 40).bind("agenceId", AGENCY_2)
+                .bind("places", 40).bind("agenceId", AGENCY_2)
                 .bind("desc", "Coach de luxe 40 places, vitres panoramiques, guide touristique optionnel.")
-                .bind("plaque", "LT-3381-CM").bind("annee", "2021").bind("poids", 35.0).bind("vitesse", 125.0).bind("dispo", 1).then())
+                .bind("plaque", "LT-3381-CM").bind("photo", "https://images.unsplash.com/photo-1557223562-6c77ef16210f?w=400").then())
             // Agency 3
             .then(db.sql(sql).bind("id", VEH_9).bind("nom", "BTU Grand Bus-01").bind("modele", "Yutong ZK6112HG")
-                .bind("marque", "Yutong").bind("places", 50).bind("agenceId", AGENCY_3)
+                .bind("places", 50).bind("agenceId", AGENCY_3)
                 .bind("desc", "Bus 50 places, climatisé, pour liaisons Bafoussam–Douala et Bafoussam–Yaoundé.")
-                .bind("plaque", "OU-1134-CM").bind("annee", "2020").bind("poids", 25.0).bind("vitesse", 110.0).bind("dispo", 1).then())
+                .bind("plaque", "OU-1134-CM").bind("photo", "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400").then())
             .then(db.sql(sql).bind("id", VEH_10).bind("nom", "BTU Express-02").bind("modele", "King Long XMQ6100")
-                .bind("marque", "King Long").bind("places", 40).bind("agenceId", AGENCY_3)
+                .bind("places", 40).bind("agenceId", AGENCY_3)
                 .bind("desc", "Bus 40 places, rapidité et fiabilité sur l'axe Ouest.")
-                .bind("plaque", "OU-5567-CM").bind("annee", "2018").bind("poids", 25.0).bind("vitesse", 105.0).bind("dispo", 1).then())
+                .bind("plaque", "OU-5567-CM").bind("photo", "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400").then())
             .then(db.sql(sql).bind("id", VEH_11).bind("nom", "BTU Minibus-03").bind("modele", "Toyota Coaster HZB50")
-                .bind("marque", "Toyota").bind("places", 30).bind("agenceId", AGENCY_3)
+                .bind("places", 30).bind("agenceId", AGENCY_3)
                 .bind("desc", "Minibus 30 places, desserte des villes secondaires de l'Ouest.")
-                .bind("plaque", "OU-8890-CM").bind("annee", "2019").bind("poids", 20.0).bind("vitesse", 100.0).bind("dispo", 1).then())
+                .bind("plaque", "OU-8890-CM").bind("photo", "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400").then())
             // Agency 4
             .then(db.sql(sql).bind("id", VEH_13).bind("nom", "CL Minibus-01 Sud").bind("modele", "Toyota HiAce Commuter")
-                .bind("marque", "Toyota").bind("places", 18).bind("agenceId", AGENCY_4)
+                .bind("places", 18).bind("agenceId", AGENCY_4)
                 .bind("desc", "Minibus 18 places, axe Yaoundé–Mbalmayo–Ebolowa.")
-                .bind("plaque", "CE-2201-CM").bind("annee", "2021").bind("poids", 15.0).bind("vitesse", 110.0).bind("dispo", 1).then())
+                .bind("plaque", "CE-2201-CM").bind("photo", "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400").then())
             .then(db.sql(sql).bind("id", VEH_14).bind("nom", "CL Minibus-02 Kribi").bind("modele", "Nissan Urvan NV350")
-                .bind("marque", "Nissan").bind("places", 15).bind("agenceId", AGENCY_4)
+                .bind("places", 15).bind("agenceId", AGENCY_4)
                 .bind("desc", "Minibus 15 places, liaison directe Yaoundé–Kribi.")
-                .bind("plaque", "CE-4423-CM").bind("annee", "2022").bind("poids", 15.0).bind("vitesse", 115.0).bind("dispo", 1).then())
+                .bind("plaque", "CE-4423-CM").bind("photo", "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400").then())
             .doOnSuccess(v -> log.info("  ✔ Véhicules insérés (13)"));
     }
 
@@ -448,61 +463,56 @@ public class DataSeeder {
     private Mono<Void> seedEmployes() {
         String sqlEmp = """
             INSERT INTO employes
-              (id_employe, user_id, id_agence_voyage, nom, prenom, poste, departement,
-               date_embauche, statut_employe, type_employe, numero_piece, permis_categorie)
+              (id, user_id, agence_id, poste, date_embauche, departement, statut_employe)
             VALUES
-              (:id, :userId, :agenceId, :nom, :prenom, :poste, :dept,
-               :dateEmb, :statut, :type, :piece, :permis)
-            ON CONFLICT (id_employe) DO NOTHING
+              (:id, :userId, :agenceId, :poste, :dateEmb, :dept, :statut)
+            ON CONFLICT (id) DO NOTHING
             """;
 
         return
             db.sql(sqlEmp)
-                .bind("id", "emp-001").bind("userId", USER_CHAUFF_1).bind("agenceId", AGENCY_1)
-                .bind("nom", "MBARGA").bind("prenom", "Jean-Pierre").bind("poste", "Chauffeur Principal").bind("dept", "Exploitation")
-                .bind("dateEmb", "2015-03-01").bind("statut", "ACTIF").bind("type", "CHAUFFEUR")
-                .bind("piece", "CNI-CM-1234567").bind("permis", "D").then()
-            .then(db.sql(sqlEmp)
-                .bind("id", "emp-002").bind("userId", USER_CHAUFF_2).bind("agenceId", AGENCY_1)
-                .bind("nom", "ESSOMBA").bind("prenom", "Hervé").bind("poste", "Chauffeur").bind("dept", "Exploitation")
-                .bind("dateEmb", "2018-07-15").bind("statut", "ACTIF").bind("type", "CHAUFFEUR")
-                .bind("piece", "CNI-CM-2345678").bind("permis", "D").then())
-            .then(db.sql(sqlEmp)
-                .bind("id", "emp-003").bind("userId", USER_CHAUFF_3).bind("agenceId", AGENCY_1)
-                .bind("nom", "ATEBA").bind("prenom", "Serge").bind("poste", "Chauffeur").bind("dept", "Exploitation")
-                .bind("dateEmb", "2016-11-20").bind("statut", "ACTIF").bind("type", "CHAUFFEUR")
-                .bind("piece", "CNI-CM-3456789").bind("permis", "D").then())
-            .then(db.sql(sqlEmp)
-                .bind("id", "emp-004").bind("userId", USER_EMP_4).bind("agenceId", AGENCY_1)
-                .bind("nom", "BELIBI").bind("prenom", "Christelle").bind("poste", "Caissière").bind("dept", "Finance")
-                .bind("dateEmb", "2020-01-06").bind("statut", "ACTIF").bind("type", "EMPLOYE")
-                .bind("piece", "CNI-CM-4567890").bindNull("permis", String.class).then())
-            .then(db.sql(sqlEmp)
-                .bind("id", "emp-005").bind("userId", USER_CHAUFF_4).bind("agenceId", AGENCY_2)
-                .bind("nom", "ABENA").bind("prenom", "Pierre").bind("poste", "Chauffeur VIP Senior").bind("dept", "Exploitation VIP")
-                .bind("dateEmb", "2012-05-10").bind("statut", "ACTIF").bind("type", "CHAUFFEUR")
-                .bind("piece", "CNI-CM-5678901").bind("permis", "D+E").then())
-            .then(db.sql(sqlEmp)
-                .bind("id", "emp-006").bind("userId", USER_CHAUFF_5).bind("agenceId", AGENCY_2)
-                .bind("nom", "NGUEMA").bind("prenom", "Paul").bind("poste", "Chauffeur VIP").bind("dept", "Exploitation VIP")
-                .bind("dateEmb", "2017-09-01").bind("statut", "ACTIF").bind("type", "CHAUFFEUR")
-                .bind("piece", "CNI-CM-6789012").bind("permis", "D").then())
-            .then(db.sql(sqlEmp)
-                .bind("id", "emp-007").bind("userId", USER_CHAUFF_7).bind("agenceId", AGENCY_3)
-                .bind("nom", "KAMGA").bind("prenom", "Aristide").bind("poste", "Chauffeur Principal").bind("dept", "Exploitation")
-                .bind("dateEmb", "2014-02-14").bind("statut", "ACTIF").bind("type", "CHAUFFEUR")
-                .bind("piece", "CNI-CM-7890123").bind("permis", "D").then())
-            .then(db.sql(sqlEmp)
-                .bind("id", "emp-008").bind("userId", USER_CHAUFF_8).bind("agenceId", AGENCY_3)
-                .bind("nom", "TIENTCHEU").bind("prenom", "Roger").bind("poste", "Chauffeur").bind("dept", "Exploitation")
-                .bind("dateEmb", "2016-04-01").bind("statut", "ACTIF").bind("type", "CHAUFFEUR")
-                .bind("piece", "CNI-CM-8901234").bind("permis", "D").then())
-            .then(db.sql(sqlEmp)
-                .bind("id", "emp-010").bind("userId", USER_CHAUFF_10).bind("agenceId", AGENCY_4)
-                .bind("nom", "ZAMBO").bind("prenom", "Eric").bind("poste", "Chauffeur").bind("dept", "Exploitation")
-                .bind("dateEmb", "2019-06-01").bind("statut", "ACTIF").bind("type", "CHAUFFEUR")
-                .bind("piece", "CNI-CM-9012345").bind("permis", "D").then())
-            .doOnSuccess(v -> log.info("  ✔ Employés insérés (9)"));
+                .bind("id", EMP_1).bind("userId", USER_EMP_4).bind("agenceId", AGENCY_1)
+                .bind("poste", "Caissière").bind("dept", "Finance")
+                .bind("dateEmb", "2020-01-06").bind("statut", "ACTIF")
+                .then()
+            .doOnSuccess(v -> log.info("  ✔ Employés insérés (1)"));
+    }
+
+    private Mono<Void> seedChauffeurs() {
+        String sqlChauff = """
+            INSERT INTO chauffeurs
+              (id, user_id, agence_id, statut, annee_experience, numero_permis)
+            VALUES
+              (:id, :userId, :agenceId, :statut, :experience, :permis)
+            ON CONFLICT (id) DO NOTHING
+            """;
+
+        return
+            db.sql(sqlChauff)
+                .bind("id", CHAUFF_1).bind("userId", USER_CHAUFF_1).bind("agenceId", AGENCY_1)
+                .bind("statut", "ACTIF").bind("experience", 10).bind("permis", "CNI-CM-1234567").then()
+            .then(db.sql(sqlChauff)
+                .bind("id", CHAUFF_2).bind("userId", USER_CHAUFF_2).bind("agenceId", AGENCY_1)
+                .bind("statut", "ACTIF").bind("experience", 5).bind("permis", "CNI-CM-2345678").then())
+            .then(db.sql(sqlChauff)
+                .bind("id", CHAUFF_3).bind("userId", USER_CHAUFF_3).bind("agenceId", AGENCY_1)
+                .bind("statut", "ACTIF").bind("experience", 8).bind("permis", "CNI-CM-3456789").then())
+            .then(db.sql(sqlChauff)
+                .bind("id", CHAUFF_4).bind("userId", USER_CHAUFF_4).bind("agenceId", AGENCY_2)
+                .bind("statut", "ACTIF").bind("experience", 15).bind("permis", "CNI-CM-5678901").then())
+            .then(db.sql(sqlChauff)
+                .bind("id", CHAUFF_5).bind("userId", USER_CHAUFF_5).bind("agenceId", AGENCY_2)
+                .bind("statut", "ACTIF").bind("experience", 7).bind("permis", "CNI-CM-6789012").then())
+            .then(db.sql(sqlChauff)
+                .bind("id", CHAUFF_7).bind("userId", USER_CHAUFF_7).bind("agenceId", AGENCY_3)
+                .bind("statut", "ACTIF").bind("experience", 12).bind("permis", "CNI-CM-7890123").then())
+            .then(db.sql(sqlChauff)
+                .bind("id", CHAUFF_8).bind("userId", USER_CHAUFF_8).bind("agenceId", AGENCY_3)
+                .bind("statut", "ACTIF").bind("experience", 9).bind("permis", "CNI-CM-8901234").then())
+            .then(db.sql(sqlChauff)
+                .bind("id", CHAUFF_10).bind("userId", USER_CHAUFF_10).bind("agenceId", AGENCY_4)
+                .bind("statut", "ACTIF").bind("experience", 6).bind("permis", "CNI-CM-9012345").then())
+            .doOnSuccess(v -> log.info("  ✔ Chauffeurs insérés (8)"));
     }
 
     // ─────────────────────────────────────────────
@@ -613,29 +623,29 @@ public class DataSeeder {
     private Mono<Void> seedLignesVoyage() {
         String sql = """
             INSERT INTO lignes_voyage
-              (id_ligne, id_voyage, id_agence_voyage, id_vehicule, id_chauffeur, id_class_voyage)
+              (id_ligne_voyage, id_voyage, id_agence_voyage, id_vehicule, id_chauffeur, id_class_voyage)
             VALUES
               (:id, :voyId, :agenceId, :vehId, :chauffId, :classId)
-            ON CONFLICT (id_ligne) DO NOTHING
+            ON CONFLICT (id_ligne_voyage) DO NOTHING
             """;
 
         return
             db.sql(sql).bind("id", LIGNE_1).bind("voyId", VOY_1).bind("agenceId", AGENCY_1)
-                .bind("vehId", VEH_1).bind("chauffId", USER_CHAUFF_1).bind("classId", CL_1).then()
+                .bind("vehId", VEH_1).bind("chauffId", CHAUFF_1).bind("classId", CL_1).then()
             .then(db.sql(sql).bind("id", LIGNE_2).bind("voyId", VOY_2).bind("agenceId", AGENCY_1)
-                .bind("vehId", VEH_2).bind("chauffId", USER_CHAUFF_2).bind("classId", CL_2).then())
+                .bind("vehId", VEH_2).bind("chauffId", CHAUFF_2).bind("classId", CL_2).then())
             .then(db.sql(sql).bind("id", LIGNE_3).bind("voyId", VOY_3).bind("agenceId", AGENCY_2)
-                .bind("vehId", VEH_5).bind("chauffId", USER_CHAUFF_4).bind("classId", CL_5).then())
+                .bind("vehId", VEH_5).bind("chauffId", CHAUFF_4).bind("classId", CL_5).then())
             .then(db.sql(sql).bind("id", LIGNE_4).bind("voyId", VOY_4).bind("agenceId", AGENCY_1)
-                .bind("vehId", VEH_4).bind("chauffId", USER_CHAUFF_3).bind("classId", CL_4).then())
+                .bind("vehId", VEH_4).bind("chauffId", CHAUFF_3).bind("classId", CL_4).then())
             .then(db.sql(sql).bind("id", LIGNE_5).bind("voyId", VOY_5).bind("agenceId", AGENCY_3)
-                .bind("vehId", VEH_9).bind("chauffId", USER_CHAUFF_7).bind("classId", CL_8).then())
+                .bind("vehId", VEH_9).bind("chauffId", CHAUFF_7).bind("classId", CL_8).then())
             .then(db.sql(sql).bind("id", LIGNE_6).bind("voyId", VOY_6).bind("agenceId", AGENCY_1)
-                .bind("vehId", VEH_1).bind("chauffId", USER_CHAUFF_1).bind("classId", CL_1).then())
+                .bind("vehId", VEH_1).bind("chauffId", CHAUFF_1).bind("classId", CL_1).then())
             .then(db.sql(sql).bind("id", LIGNE_7).bind("voyId", VOY_7).bind("agenceId", AGENCY_2)
-                .bind("vehId", VEH_6).bind("chauffId", USER_CHAUFF_5).bind("classId", CL_6).then())
+                .bind("vehId", VEH_6).bind("chauffId", CHAUFF_5).bind("classId", CL_6).then())
             .then(db.sql(sql).bind("id", LIGNE_8).bind("voyId", VOY_8).bind("agenceId", AGENCY_4)
-                .bind("vehId", VEH_13).bind("chauffId", USER_CHAUFF_10).bind("classId", CL_10).then())
+                .bind("vehId", VEH_13).bind("chauffId", CHAUFF_10).bind("classId", CL_10).then())
             .doOnSuccess(v -> log.info("  ✔ Lignes voyage insérées (8)"));
     }
 
@@ -645,28 +655,28 @@ public class DataSeeder {
     private Mono<Void> seedAffiliations() {
         String sql = """
             INSERT INTO affiliation_agence_voyage
-              (id, gare_routiere_id, agency_id, agency_name, statut, date_debut, montant_loyer, frequence_paiement)
+              (id, gare_routiere_id, agency_id, agency_name, statut, echeance, montant_affiliation)
             VALUES
-              (:id, :gareId, :agenceId, :agenceName, :statut, :dateDebut, :montant, :freq)
+              (:id, :gareId, :agenceId, :agenceName, :statut, :echeance, :montant)
             ON CONFLICT (id) DO NOTHING
             """;
 
         return
             db.sql(sql).bind("id", AFF_1).bind("gareId", GARE_1).bind("agenceId", AGENCY_1)
                 .bind("agenceName", "General Express Yaoundé").bind("statut", "ACTIF")
-                .bind("dateDebut", "2020-01-01").bind("montant", 75000.0).bind("freq", "MENSUEL").then()
+                .bind("echeance", "2026-05-01").bind("montant", 75000.0).then()
             .then(db.sql(sql).bind("id", AFF_2).bind("gareId", GARE_4).bind("agenceId", AGENCY_2)
                 .bind("agenceName", "Touristique Express VIP Douala").bind("statut", "ACTIF")
-                .bind("dateDebut", "2019-06-01").bind("montant", 90000.0).bind("freq", "MENSUEL").then())
+                .bind("echeance", "2026-05-01").bind("montant", 90000.0).then())
             .then(db.sql(sql).bind("id", AFF_3).bind("gareId", GARE_5).bind("agenceId", AGENCY_3)
                 .bind("agenceName", "BTU - Bafoussam Transit Unité").bind("statut", "ACTIF")
-                .bind("dateDebut", "2021-03-15").bind("montant", 55000.0).bind("freq", "MENSUEL").then())
+                .bind("echeance", "2026-05-01").bind("montant", 55000.0).then())
             .then(db.sql(sql).bind("id", AFF_4).bind("gareId", GARE_2).bind("agenceId", AGENCY_4)
                 .bind("agenceName", "Confort Lines - Axe Centre-Sud").bind("statut", "ACTIF")
-                .bind("dateDebut", "2022-09-01").bind("montant", 65000.0).bind("freq", "MENSUEL").then())
+                .bind("echeance", "2026-05-01").bind("montant", 65000.0).then())
             .then(db.sql(sql).bind("id", AFF_5).bind("gareId", GARE_4).bind("agenceId", AGENCY_1)
                 .bind("agenceName", "General Express Yaoundé").bind("statut", "ACTIF")
-                .bind("dateDebut", "2022-01-01").bind("montant", 80000.0).bind("freq", "MENSUEL").then())
+                .bind("echeance", "2026-05-01").bind("montant", 80000.0).then())
             .doOnSuccess(v -> log.info("  ✔ Affiliations insérées (5)"));
     }
 
