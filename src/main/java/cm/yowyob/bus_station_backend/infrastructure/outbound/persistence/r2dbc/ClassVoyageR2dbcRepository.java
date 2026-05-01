@@ -14,6 +14,6 @@ public interface ClassVoyageR2dbcRepository extends R2dbcRepository<ClassVoyageE
     """)
     Flux<ClassVoyageEntity> findAllPaged(Pageable pageable);
 
-    @Query("SELECT * FROM class_voyage")
+    @Query("SELECT * FROM class_voyage WHERE id_agence_voyage = :agenceId")
     Flux<ClassVoyageEntity> findByIdAgenceVoyage(UUID agenceId);
 }

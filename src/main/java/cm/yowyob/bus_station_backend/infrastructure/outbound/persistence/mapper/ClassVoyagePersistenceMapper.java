@@ -11,6 +11,7 @@ public class ClassVoyagePersistenceMapper {
                 .idClassVoyage(entity.getIdClassVoyage())
                 .nom(entity.getNom())
                 .prix(entity.getPrix())
+                .idAgenceVoyage(entity.getIdAgenceVoyage())
                 .build();
     }
     public ClassVoyageEntity toEntity(ClassVoyage domain) {
@@ -19,6 +20,7 @@ public class ClassVoyagePersistenceMapper {
                 .idClassVoyage(domain.getIdClassVoyage())
                 .nom(domain.getNom())
                 .prix(domain.getPrix())
+                .idAgenceVoyage(domain.getIdAgenceVoyage())
                 .isActive(true)
                 .version(1)
                 .build();

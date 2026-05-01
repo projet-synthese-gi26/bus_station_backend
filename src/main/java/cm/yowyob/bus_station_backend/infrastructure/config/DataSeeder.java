@@ -441,21 +441,21 @@ public class DataSeeder {
     // 6. CLASSES VOYAGE
     // ─────────────────────────────────────────────
     private Mono<Void> seedClassVoyage() {
-        String sql = "INSERT INTO class_voyage (id, label, price, is_active, version) " +
-                     "VALUES (:id, :label, :price, true, 0) ON CONFLICT (id) DO NOTHING";
+        String sql = "INSERT INTO class_voyage (id, label, price, is_active, version, id_agence_voyage) " +
+                     "VALUES (:id, :label, :price, true, 0, :agenceId) ON CONFLICT (id) DO NOTHING";
 
         return
-            db.sql(sql).bind("id", CL_1).bind("label", "Classique GE").bind("price", 6000.0).then()
-            .then(db.sql(sql).bind("id", CL_2).bind("label", "Confort GE").bind("price", 8500.0).then())
-            .then(db.sql(sql).bind("id", CL_3).bind("label", "Express GE").bind("price", 7500.0).then())
-            .then(db.sql(sql).bind("id", CL_4).bind("label", "Nuit Confort GE").bind("price", 9000.0).then())
-            .then(db.sql(sql).bind("id", CL_5).bind("label", "VIP Standard TE").bind("price", 15000.0).then())
-            .then(db.sql(sql).bind("id", CL_6).bind("label", "VIP Premium TE").bind("price", 22000.0).then())
-            .then(db.sql(sql).bind("id", CL_7).bind("label", "Business Class TE").bind("price", 35000.0).then())
-            .then(db.sql(sql).bind("id", CL_8).bind("label", "Classique BTU").bind("price", 5000.0).then())
-            .then(db.sql(sql).bind("id", CL_9).bind("label", "Rapide BTU").bind("price", 6500.0).then())
-            .then(db.sql(sql).bind("id", CL_10).bind("label", "Standard CL").bind("price", 4500.0).then())
-            .then(db.sql(sql).bind("id", CL_11).bind("label", "Confort CL").bind("price", 6000.0).then())
+            db.sql(sql).bind("id", CL_1).bind("label", "Classique GE").bind("price", 6000.0).bind("agenceId", AGENCY_1).then()
+            .then(db.sql(sql).bind("id", CL_2).bind("label", "Confort GE").bind("price", 8500.0).bind("agenceId", AGENCY_1).then())
+            .then(db.sql(sql).bind("id", CL_3).bind("label", "Express GE").bind("price", 7500.0).bind("agenceId", AGENCY_1).then())
+            .then(db.sql(sql).bind("id", CL_4).bind("label", "Nuit Confort GE").bind("price", 9000.0).bind("agenceId", AGENCY_1).then())
+            .then(db.sql(sql).bind("id", CL_5).bind("label", "VIP Standard TE").bind("price", 15000.0).bind("agenceId", AGENCY_2).then())
+            .then(db.sql(sql).bind("id", CL_6).bind("label", "VIP Premium TE").bind("price", 22000.0).bind("agenceId", AGENCY_2).then())
+            .then(db.sql(sql).bind("id", CL_7).bind("label", "Business Class TE").bind("price", 35000.0).bind("agenceId", AGENCY_2).then())
+            .then(db.sql(sql).bind("id", CL_8).bind("label", "Classique BTU").bind("price", 5000.0).bind("agenceId", AGENCY_3).then())
+            .then(db.sql(sql).bind("id", CL_9).bind("label", "Rapide BTU").bind("price", 6500.0).bind("agenceId", AGENCY_3).then())
+            .then(db.sql(sql).bind("id", CL_10).bind("label", "Standard CL").bind("price", 4500.0).bind("agenceId", AGENCY_4).then())
+            .then(db.sql(sql).bind("id", CL_11).bind("label", "Confort CL").bind("price", 6000.0).bind("agenceId", AGENCY_4).then())
             .doOnSuccess(v -> log.info("  ✔ Classes voyage insérées (11)"));
     }
 

@@ -26,11 +26,14 @@ public class ClassVoyageEntity implements Persistable<UUID> {
     @Column("price")
     private double prix;
 
+    @Column("version")
+    private Integer version;
+
     @Column("is_active")
     private boolean isActive;
 
-    @Column("version")
-    private Integer version;
+    @Column("id_agence_voyage")
+    private UUID idAgenceVoyage;
 
     @Transient
     private boolean isNew = false;

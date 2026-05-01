@@ -15,4 +15,5 @@
     <include file="db/changelog/changes/008-create-voyage-brouillon-table.sql"/>
     <include file="classpath:db/changelog/changes/009-create-alertes-agence-table.sql"/>
     <include file="classpath:db/changelog/changes/010-seed-data.sql"/>
+    <include file="classpath:db/changelog/changes/011-add-agence-to-class-voyage.sql"/>
 </databaseChangeLog>

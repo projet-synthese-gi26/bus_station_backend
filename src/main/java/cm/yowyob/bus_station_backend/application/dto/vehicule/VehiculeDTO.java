@@ -12,6 +12,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VehiculeDTO {
+    private UUID idVehicule;
     private String nom;
     private String modele;
     private String description;
