@@ -98,7 +98,10 @@ CREATE TABLE agences_voyage (
     -- Columns from 005 and extras
     logo_url VARCHAR(500),
     rating DOUBLE PRECISION DEFAULT 0.0,
-    specialties TEXT
+    specialties TEXT,
+    moyens_paiement TEXT,
+    vehicule_id_defaut UUID,
+    chauffeur_id_defaut UUID
 );
 
 CREATE TABLE gare_routiere (

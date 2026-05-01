@@ -332,7 +332,7 @@ class ReservationWorkflowIntegrationTest extends BaseIntegrationTest {
         databaseClient
                 .sql("""
             INSERT INTO agences_voyage
-            (agency_id, organisation_id, user_id, long_name, short_name, location)
+            (agency_id, organisation_id, user_id, name, short_name, location)
             VALUES (:agencyId, :orgId, :userId, :longName, :shortName, :location)
         """)
                 .bind("agencyId", agencyId)
@@ -351,13 +351,12 @@ class ReservationWorkflowIntegrationTest extends BaseIntegrationTest {
         databaseClient
                 .sql("""
             INSERT INTO class_voyage
-            (id_class_voyage, nom, prix, taux_annulation, id_agence_voyage)
-            VALUES (:id, :nom, :prix, :taux, :agenceId)
+            (id, label, price, id_agence_voyage)
+            VALUES (:id, :nom, :prix, :agenceId)
         """)
                 .bind("id", classId)
                 .bind("nom", "Économique")
                 .bind("prix", 25000.0)
-                .bind("taux", 10.0)
                 .bind("agenceId", agenceId)
                 .fetch()
                 .rowsUpdated()

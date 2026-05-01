@@ -3,20 +3,26 @@ package cm.yowyob.bus_station_backend;
 import cm.yowyob.bus_station_backend.infrastructure.config.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.r2dbc.core.DatabaseClient;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+import org.springframework.data.redis.core.ReactiveValueOperations;
 import org.springframework.http.HttpHeaders;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
@@ -36,21 +42,30 @@ public abstract class BaseIntegrationTest {
     protected KafkaTemplate<String, Object> kafkaTemplate;
 
     @MockBean
-    protected ReactiveRedisTemplate<Object, Object> reactiveRedisTemplate;
+    protected ReactiveStringRedisTemplate reactiveStringRedisTemplate;
+
+    @MockBean
+    protected ReactiveValueOperations<String, String> reactiveValueOperations;
 
     protected String adminToken;
     protected String userToken;
+    protected String bsmToken;
     protected UUID testUserId;
     protected UUID testAdminId;
+    protected UUID testBsmId;
 
     @BeforeEach
     protected void setUpBase() {
+        when(reactiveStringRedisTemplate.opsForValue()).thenReturn(reactiveValueOperations);
+        when(reactiveStringRedisTemplate.hasKey(anyString())).thenReturn(Mono.just(false));
+        when(reactiveValueOperations.set(anyString(), anyString(), any())).thenReturn(Mono.just(true));
+        when(reactiveValueOperations.get(anyString())).thenReturn(Mono.empty());
+        
         cleanDatabase();
         setupTestUsers();
     }
 
     protected void cleanDatabase() {
-        // Ordre respectant les contraintes d'intégrité (clés étrangères)
         List<String> tables = List.of(
                 "politique_et_taxes",
                 "affiliation_agence_voyage",
@@ -72,26 +87,24 @@ public abstract class BaseIntegrationTest {
                 "users",
                 "voyages",
                 "organization",
-                "coordonnee");
+                "coordonnee"
+        );
 
-        databaseClient.sql("SET REFERENTIAL_INTEGRITY FALSE").then().block(); // Pour H2
-        // Pour Postgres utilisez : databaseClient.sql("TRUNCATE " + String.join(",",
-        // tables) + " CASCADE").then().block();
-
+        databaseClient.sql("SET REFERENTIAL_INTEGRITY FALSE").then().block();
         Flux.fromIterable(tables)
                 .flatMap(table -> databaseClient.sql("DELETE FROM " + table).then())
                 .blockLast();
-
         databaseClient.sql("SET REFERENTIAL_INTEGRITY TRUE").then().block();
     }
 
     protected void setupTestUsers() {
         testUserId = UUID.randomUUID();
         testAdminId = UUID.randomUUID();
+        testBsmId = UUID.randomUUID();
 
-        // Insérer physiquement les utilisateurs pour éviter les violations de FK
         insertUserInDb(testUserId, "user@test.com", "USAGER");
         insertUserInDb(testAdminId, "admin@test.com", "ADMIN");
+        insertUserInDb(testBsmId, "bsm@test.com", "BUS_STATION_MANAGER");
 
         userToken = jwtService.generateToken(
                 testUserId.toString(),
@@ -100,6 +113,10 @@ public abstract class BaseIntegrationTest {
         adminToken = jwtService.generateToken(
                 testAdminId.toString(),
                 Map.of("roles", List.of("ADMIN"), "userId", testAdminId));
+
+        bsmToken = jwtService.generateToken(
+                testBsmId.toString(),
+                Map.of("roles", List.of("BUS_STATION_MANAGER"), "userId", testBsmId));
     }
 
     private void insertUserInDb(UUID id, String email, String role) {
@@ -116,7 +133,7 @@ public abstract class BaseIntegrationTest {
     }
 
     /**
-     * WebTestClient avec token
+     * Helper pour WebTestClient avec token
      */
     protected WebTestClient authenticatedClient(String token) {
         return webTestClient.mutate()
