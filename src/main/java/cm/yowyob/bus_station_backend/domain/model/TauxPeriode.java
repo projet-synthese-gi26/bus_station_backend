@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -14,9 +14,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class TauxPeriode {
     private UUID idTauxPeriode;
-    private Date dateDebut;
-    private Date dateFin;
-    private double taux;
-    private double compensation;
+    private double valeur;
+    private LocalDateTime dateDebut;
+    private LocalDateTime dateFin;
     private UUID idPolitiqueAnnulation;
 }

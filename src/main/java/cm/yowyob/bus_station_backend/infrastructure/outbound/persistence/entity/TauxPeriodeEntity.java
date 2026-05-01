@@ -9,7 +9,7 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Table("taux_periode")
@@ -20,10 +20,9 @@ import java.util.UUID;
 public class TauxPeriodeEntity implements Persistable<UUID> {
     @Id
     private UUID idTauxPeriode;
-    private Date dateDebut;
-    private Date dateFin;
-    private double taux;
-    private double compensation;
+    private double valeur;
+    private LocalDateTime dateDebut;
+    private LocalDateTime dateFin;
     private UUID idPolitiqueAnnulation;
 
     @Transient

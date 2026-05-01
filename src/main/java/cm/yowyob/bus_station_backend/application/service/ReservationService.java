@@ -104,6 +104,19 @@ public class ReservationService implements ReservationUseCase {
 
         // --- SAGA CREATE RESERVATION ---
         @Override
+        public Mono<ReservationDetailDTO> confirmer(PayRequestDTO payRequestDTO) {
+                // Cette méthode est appelée par le controller pour confirmer un paiement.
+                // Elle doit appeler le service de paiement ou utiliser confirmReservation.
+                return Mono.error(new UnsupportedOperationException("Non implémenté"));
+        }
+
+        @Override
+        public Mono<ResultStatus> getPaymentStatus(String transactionCode) {
+                return paymentPort.checkPaymentStatus(transactionCode)
+                        .map(cm.yowyob.bus_station_backend.application.dto.payment.StatusResultDTO::getStatus);
+        }
+
+        @Override
         public Mono<Reservation> createReservation(ReservationDTO dto) {
                 // Validation basique
                 if (dto.getPassagerDTO() == null || dto.getPassagerDTO().length == 0) {
@@ -178,10 +191,7 @@ public class ReservationService implements ReservationUseCase {
                                                                                 .idHistorique(UUID.randomUUID())
                                                                                 .idReservation(reservation
                                                                                                 .getIdReservation())
-                                                                                .dateReservation(new Date()) // TODO use
-                                                                                                             // LocalDateTime
-                                                                                                             // in
-                                                                                                             // Domain
+                                                                                .dateReservation(LocalDateTime.now())
                                                                                 .statusHistorique(
                                                                                                 StatutHistorique.VALIDER)
                                                                                 .build();

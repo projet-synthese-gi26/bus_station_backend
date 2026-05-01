@@ -59,7 +59,17 @@ public abstract class BaseIntegrationTest {
         when(reactiveStringRedisTemplate.opsForValue()).thenReturn(reactiveValueOperations);
         when(reactiveStringRedisTemplate.hasKey(anyString())).thenReturn(Mono.just(false));
         when(reactiveValueOperations.set(anyString(), anyString(), any())).thenReturn(Mono.just(true));
-        when(reactiveValueOperations.get(anyString())).thenReturn(Mono.empty());
+        
+        // Mocking TokenStoreService.consumePasswordResetToken: get then delete
+        // Le token est passé comme argument à get(), on doit retourner la valeur stockée (le username)
+        when(reactiveValueOperations.get(anyString())).thenAnswer(invocation -> {
+            String key = invocation.getArgument(0);
+            if (key.startsWith("auth:pwd-reset:")) {
+                return Mono.just("testuser");
+            }
+            return Mono.empty();
+        });
+        when(reactiveStringRedisTemplate.delete(anyString())).thenReturn(Mono.just(1L));
         
         cleanDatabase();
         setupTestUsers();

@@ -28,6 +28,7 @@ public class AgenceVoyageMapper {
                 .longName(dto.getLong_name())
                 .shortName(dto.getShort_name())
                 .location(dto.getLocation())
+                .gareRoutiereId(dto.getGare_routiere_id())
                 .socialNetwork(dto.getSocial_network())
                 .description(dto.getDescription())
                 .greetingMessage(dto.getGreeting_message())
@@ -48,6 +49,7 @@ public class AgenceVoyageMapper {
         dto.setLong_name(domain.getLongName());
         dto.setShort_name(domain.getShortName());
         dto.setLocation(domain.getLocation());
+        dto.setGare_routiere_id(domain.getGareRoutiereId());
         dto.setSocial_network(domain.getSocialNetwork());
         dto.setDescription(domain.getDescription());
         dto.setGreeting_message(domain.getGreetingMessage());

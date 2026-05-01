@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -16,9 +16,9 @@ import java.util.UUID;
 public class Historique {
     private UUID idHistorique;
     private StatutHistorique statusHistorique;
-    private Date dateReservation;
-    private Date dateConfirmation;
-    private Date dateAnnulation;
+    private LocalDateTime dateReservation;
+    private LocalDateTime dateConfirmation;
+    private LocalDateTime dateAnnulation;
     private String causeAnnulation;
     private String origineAnnulation;
     private double tauxAnnulation;

@@ -10,6 +10,7 @@ import cm.yowyob.bus_station_backend.application.mapper.AgenceVoyageMapper;
 import cm.yowyob.bus_station_backend.application.mapper.VehiculeMapper;
 import cm.yowyob.bus_station_backend.application.port.in.AgenceUseCase;
 import cm.yowyob.bus_station_backend.application.port.out.AgencePersistencePort;
+import cm.yowyob.bus_station_backend.application.port.out.GareRoutierePersistencePort;
 import cm.yowyob.bus_station_backend.application.port.out.NotificationPort;
 import cm.yowyob.bus_station_backend.application.port.out.OrganizationPersistencePort;
 import cm.yowyob.bus_station_backend.application.port.out.UserPersistencePort;
@@ -40,6 +41,7 @@ public class AgenceService implements AgenceUseCase {
     private final NotificationPort notificationPort;
     private final UserPersistencePort userPersistencePort;
     private final OrganizationPersistencePort organizationPersistencePort;
+    private final GareRoutierePersistencePort gareRoutierePersistencePort;
     private final AgenceVoyageMapper agenceMapper;
     private final VehiculeMapper vehiculeMapper;
     private final TransactionalOperator rxtx;
@@ -64,52 +66,52 @@ public class AgenceService implements AgenceUseCase {
                 .map(page -> page.map(agenceMapper::toResponseDTO));
     }
 
-    // TODO: Lorsque on crée une agence, on doit verifier l'existence de l'agence et
-    // créer
-    // un objet affiliation
     @Override
     public Mono<AgenceVoyageResponseDTO> createAgence(AgenceVoyageDTO agenceDTO) {
         return userPersistencePort.findById(agenceDTO.getUser_id())
                 .switchIfEmpty(Mono.error(new ResourceNotFoundException("Utilisateur non trouvé")))
                 .flatMap(user -> organizationPersistencePort.findByOrganisationId(agenceDTO.getOrganisation_id())
                         .switchIfEmpty(Mono.error(new ResourceNotFoundException("Organisation non trouvée")))
-                        .flatMap(org -> Mono.zip(
-                                agencePort.existsByLongName(agenceDTO.getLong_name()),
-                                agencePort.existsByShortName(agenceDTO.getShort_name())).flatMap(tuple -> {
-                                    if (tuple.getT1() || tuple.getT2()) {
-                                        return Mono
-                                                .error(new BusinessRuleViolationException("Cette agence existe déjà"));
-                                    }
+                        .flatMap(org -> gareRoutierePersistencePort.getGareRoutiereById(agenceDTO.getGare_routiere_id())
+                                .switchIfEmpty(Mono.error(new ResourceNotFoundException("Gare routière non trouvée")))
+                                .flatMap(gare -> Mono.zip(
+                                        agencePort.existsByLongName(agenceDTO.getLong_name()),
+                                        agencePort.existsByShortName(agenceDTO.getShort_name())).flatMap(tuple -> {
+                                            if (tuple.getT1() || tuple.getT2()) {
+                                                return Mono.error(
+                                                        new BusinessRuleViolationException("Cette agence existe déjà"));
+                                            }
 
-                                    AgenceVoyage agence = AgenceVoyage.builder()
-                                            .organisationId(agenceDTO.getOrganisation_id())
-                                            .userId(user.getUserId())
-                                            .longName(agenceDTO.getLong_name())
-                                            .shortName(agenceDTO.getShort_name())
-                                            .location(agenceDTO.getLocation())
-                                            .socialNetwork(agenceDTO.getSocial_network())
-                                            .description(agenceDTO.getDescription())
-                                            .build();
+                                            AgenceVoyage agence = AgenceVoyage.builder()
+                                                    .organisationId(agenceDTO.getOrganisation_id())
+                                                    .userId(user.getUserId())
+                                                    .longName(agenceDTO.getLong_name())
+                                                    .shortName(agenceDTO.getShort_name())
+                                                    .location(agenceDTO.getLocation())
+                                                    .gareRoutiereId(agenceDTO.getGare_routiere_id())
+                                                    .socialNetwork(agenceDTO.getSocial_network())
+                                                    .description(agenceDTO.getDescription())
+                                                    .greetingMessage(agenceDTO.getGreeting_message())
+                                                    .build();
 
-                                    // Mise à jour des rôles de l'utilisateur (Logique ancien backend)
-                                    if (!user.getRoles().contains(RoleType.AGENCE_VOYAGE)) {
-                                        List<RoleType> roles = new ArrayList<>(user.getRoles());
-                                        roles.add(RoleType.AGENCE_VOYAGE);
-                                        roles.add(RoleType.ORGANISATION);
-                                        user.setRoles(roles);
-                                    }
+                                            // Mise à jour des rôles de l'utilisateur
+                                            if (!user.getRoles().contains(RoleType.AGENCE_VOYAGE)) {
+                                                List<RoleType> roles = new ArrayList<>(user.getRoles());
+                                                roles.add(RoleType.AGENCE_VOYAGE);
+                                                roles.add(RoleType.ORGANISATION);
+                                                user.setRoles(roles);
+                                            }
 
-                                    return agencePort.save(agence)
-                                            .flatMap(savedAgence -> Mono.when(
-                                                    userPersistencePort.save(user),
-                                                    notificationPort.sendNotification(
-                                                            NotificationFactory.createAgencyCreatedEvent(savedAgence,
-                                                                    user)))
-                                                    .thenReturn(savedAgence))
-                                            .map(agenceMapper::toResponseDTO);
-                                }))
-
-                )
+                                            return agencePort.save(agence)
+                                                    .flatMap(savedAgence -> Mono.when(
+                                                            userPersistencePort.save(user),
+                                                            notificationPort.sendNotification(
+                                                                    NotificationFactory.createAgencyCreatedEvent(
+                                                                            savedAgence,
+                                                                            user)))
+                                                            .thenReturn(savedAgence))
+                                                    .map(agenceMapper::toResponseDTO);
+                                }))))
                 .as(rxtx::transactional);
     }
 
@@ -123,6 +125,18 @@ public class AgenceService implements AgenceUseCase {
                 .switchIfEmpty(Mono.error(
                         new UnauthorizeException(
                                 "Vous n'êtes pas le chef de cette agence")))
+                .flatMap(existing -> {
+
+                    if (dto.getGare_routiere_id() != null) {
+                        return gareRoutierePersistencePort.getGareRoutiereById(dto.getGare_routiere_id())
+                                .switchIfEmpty(Mono.error(new ResourceNotFoundException("Gare routière non trouvée")))
+                                .map(gare -> {
+                                    existing.setGareRoutiereId(dto.getGare_routiere_id());
+                                    return existing;
+                                });
+                    }
+                    return Mono.just(existing);
+                })
                 .map(existing -> {
 
                     if (dto.getOrganisation_id() != null) {
@@ -354,4 +368,3 @@ public class AgenceService implements AgenceUseCase {
                 .map(agenceMapper::toResponseDTO);
     }
 }
-

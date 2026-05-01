@@ -18,7 +18,7 @@ import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -96,7 +96,7 @@ public class IndemnisationService implements IndemnisationUseCase {
                     if (coupon.getStatusCoupon() != StatutCoupon.VALIDE) {
                         return Mono.error(new BusinessRuleViolationException("Le coupon n'est plus valide"));
                     }
-                    if (coupon.getDateFin().before(new Date())) {
+                    if (coupon.getDateFin().isBefore(LocalDateTime.now())) {
                         coupon.setStatusCoupon(StatutCoupon.EXPIRER);
                         return indemnisationPort.saveCoupon(coupon)
                                 .then(Mono.error(new BusinessRuleViolationException("Le coupon a expiré")));

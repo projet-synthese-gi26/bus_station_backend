@@ -20,8 +20,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -97,9 +95,9 @@ public class AnnulationService implements AnnulationUseCase {
                             .flatMap(data -> {
                                 double taux = AnnulationOperator.tauxannulation(
                                         data.classVoyage, data.politique,
-                                        this.toDate(data.voyage.getDateLimiteReservation()),
-                                        this.toDate(data.voyage.getDateLimiteConfirmation()),
-                                        toDate(now));
+                                        data.voyage.getDateLimiteReservation(),
+                                        data.voyage.getDateLimiteConfirmation(),
+                                        now);
 
                                 if (!cancelDTO.isCanceled())
                                     return Mono.just(taux);
@@ -153,9 +151,9 @@ public class AnnulationService implements AnnulationUseCase {
                             return getCancellationData(res.getIdVoyage()).flatMap(data -> {
                                 double tauxComp = AnnulationOperator.tauxCompensation(
                                         data.classVoyage, data.politique,
-                                        this.toDate(data.voyage.getDateLimiteReservation()),
-                                        this.toDate(data.voyage.getDateLimiteConfirmation()),
-                                        toDate(now));
+                                        data.voyage.getDateLimiteReservation(),
+                                        data.voyage.getDateLimiteConfirmation(),
+                                        now);
 
                                 if (!cancelDTO.isCanceled())
                                     return Mono.just(tauxComp * res.getMontantPaye());
@@ -187,17 +185,16 @@ public class AnnulationService implements AnnulationUseCase {
 
     @Override
     public Mono<Void> processExpiredReservations() {
-        Date now = new Date(); // Utiliser Date au lieu de LocalDateTime
+        LocalDateTime now = LocalDateTime.now();
 
         return reservationPort.findPendingReservations()
                 .filter(res -> res.getStatutReservation() == StatutReservation.RESERVER ||
                         res.getStatutReservation() == StatutReservation.VALIDER)
                 .flatMap(res -> voyagePort.findById(res.getIdVoyage())
                         .filter(v -> {
-                            // Vérifier si la date limite de confirmation est dépassée
-                            Date dateLimiteConfirmation = this.toDate(v.getDateLimiteConfirmation());
+                            LocalDateTime dateLimiteConfirmation = v.getDateLimiteConfirmation();
                             return dateLimiteConfirmation != null &&
-                                    now.after(dateLimiteConfirmation);
+                                    now.isAfter(dateLimiteConfirmation);
                         })
                         .flatMap(v -> {
                             ReservationCancelByAgenceDTO dto = new ReservationCancelByAgenceDTO();
@@ -205,7 +202,6 @@ public class AnnulationService implements AnnulationUseCase {
                             dto.setCanceled(true);
                             dto.setCauseAnnulation("Expiration du délai de confirmation");
                             dto.setOrigineAnnulation("Système");
-                            // On utilise le systemId ou un admin id pour l'annulation auto
                             return cancelReservationByAgence(dto, res.getIdUser()).then();
                         }))
                 .then();
@@ -307,8 +303,8 @@ public class AnnulationService implements AnnulationUseCase {
                     solde.setSolde(solde.getSolde() + valeurCoupon);
                     Coupon coupon = Coupon.builder()
                             .idCoupon(UUID.randomUUID())
-                            .dateDebut(toDate(now))
-                            .dateFin(toDate(now.plus(pol.getDureeCoupon())))
+                            .dateDebut(now)
+                            .dateFin(now.plus(pol.getDureeCoupon()))
                             .valeur(valeurCoupon)
                             .statusCoupon(StatutCoupon.VALIDE)
                             .idHistorique(histId)
@@ -326,17 +322,12 @@ public class AnnulationService implements AnnulationUseCase {
         return Historique.builder()
                 .idHistorique(UUID.randomUUID())
                 .idReservation(res.getIdReservation())
-                .dateAnnulation(toDate(now))
+                .dateAnnulation(now)
                 .causeAnnulation(cause)
                 .origineAnnulation(origine)
                 .tauxAnnulation(taux)
                 .statusHistorique(stat)
                 .build();
-    }
-
-    private Date toDate(LocalDateTime localDateTime) {
-        return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
-
     }
 
     // Classe interne pour grouper les données de calcul (Data Transfer Object

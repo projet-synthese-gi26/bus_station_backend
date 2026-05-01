@@ -20,7 +20,8 @@ class AgenceVoyageControllerIntegrationTest extends BaseIntegrationTest {
     void shouldCreateAgenceSuccessfully() {
         // Given
         UUID organizationId = createTestOrganization();
-        AgenceVoyageDTO agenceDTO = TestDataBuilder.createTestAgence(organizationId, testAdminId);
+        UUID gareId = createTestGare();
+        AgenceVoyageDTO agenceDTO = TestDataBuilder.createTestAgence(organizationId, testAdminId, gareId);
 
         // When & Then
         webTestClient.post()
@@ -30,7 +31,7 @@ class AgenceVoyageControllerIntegrationTest extends BaseIntegrationTest {
                 .bodyValue(agenceDTO)
                 .exchange()
                 .expectStatus().isCreated()
-                .expectBody(AgenceVoyageResponseDTO.class)
+                .expectBody(cm.yowyob.bus_station_backend.application.dto.agence.AgenceVoyageResponseDTO.class)
                 .value(response -> {
                     assertThat(response).isNotNull();
                     assertThat(response.getLongName()).isEqualTo(agenceDTO.getLong_name());
@@ -47,7 +48,8 @@ class AgenceVoyageControllerIntegrationTest extends BaseIntegrationTest {
     void shouldReturn404WhenOrganizationNotFound() {
         // Given
         UUID nonExistentOrgId = UUID.randomUUID();
-        AgenceVoyageDTO agenceDTO = TestDataBuilder.createTestAgence(nonExistentOrgId, testAdminId);
+        UUID gareId = createTestGare();
+        AgenceVoyageDTO agenceDTO = TestDataBuilder.createTestAgence(nonExistentOrgId, testAdminId, gareId);
 
         // When & Then
         webTestClient.post()
@@ -154,6 +156,25 @@ class AgenceVoyageControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     // ===== Méthodes utilitaires =====
+
+    private UUID createTestGare() {
+        UUID gareId = UUID.randomUUID();
+        databaseClient
+                .sql("""
+                            INSERT INTO gare_routiere 
+                            (id_gare_routiere, nom_gare_routiere, ville, quartier, nom_president, manager_id)
+                            VALUES (:id, :nom, :ville, :quartier, :president, :managerId)
+                        """)
+                .bind("id", gareId)
+                .bind("nom", "Gare de Yaoundé")
+                .bind("ville", "Yaoundé")
+                .bind("quartier", "Mvan")
+                .bind("president", "Président Test")
+                .bind("managerId", testAdminId)
+                .then()
+                .block();
+        return gareId;
+    }
 
     private UUID createTestOrganization() {
         UUID orgId = UUID.randomUUID();
