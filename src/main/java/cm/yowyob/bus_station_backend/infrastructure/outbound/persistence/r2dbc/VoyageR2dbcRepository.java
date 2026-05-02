@@ -154,7 +154,7 @@ public interface VoyageR2dbcRepository extends R2dbcRepository<VoyageEntity, UUI
         JOIN lignes_voyage l ON l.id_voyage = v.id_voyage
         JOIN agences_voyage a ON a.agency_id = l.id_agence_voyage
         WHERE a.gare_routiere_id = :gareId
-          AND (CAST(:dateStr AS VARCHAR) IS NULL OR DATE(v.date_depart_prev) = CAST(:dateStr AS DATE))
+          AND (CAST(:dateStr AS VARCHAR) IS NULL OR CAST(v.date_depart_prev AS DATE) = CAST(:dateStr AS DATE))
     """)
     Mono<Long> countByGareIdAndDateOptional(UUID gareId, String dateStr);
 

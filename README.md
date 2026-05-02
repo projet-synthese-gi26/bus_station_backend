@@ -97,6 +97,20 @@ mvn spring-boot:run
 http://localhost:8080/swagger-ui.html
 http://localhost:8080/v3/api-docs
 
+---
+
+## 📄 Documentation des Workflows
+
+Pour faciliter l'intégration frontend, des rapports d'implémentation détaillés sont disponibles pour chaque bloc fonctionnel :
+
+1.  **[Bloc 1 : Authentification et Profil](./docs/AUTHENTIFICATION.md)**
+2.  **[Bloc 2 : Gares et Agences](./docs/GARES_AGENCES.md)**
+3.  **[Bloc 3 : Gestion des Ressources (Véhicules, Chauffeurs)](./docs/RESOURCES.md)**
+4.  **[Bloc 4 : Planning et Génération automatique](./docs/PLANNING.md)**
+5.  **[Bloc 5 : Tunnel de Réservation et Paiement](./docs/RESERVATIONS.md)**
+
+---
+
 ## Structure du projet
 ```swift
 src/main/java/com/example/travelplatform/
