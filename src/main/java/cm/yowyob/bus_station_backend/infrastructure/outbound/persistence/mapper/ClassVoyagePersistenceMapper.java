@@ -8,7 +8,7 @@ public class ClassVoyagePersistenceMapper {
     public ClassVoyage toDomain(ClassVoyageEntity entity) {
         if (entity == null) return null;
         return ClassVoyage.builder()
-                .idClassVoyage(entity.getIdClassVoyage())
+                .idClassVoyage(entity.getId())
                 .nom(entity.getNom())
                 .prix(entity.getPrix())
                 .idAgenceVoyage(entity.getIdAgenceVoyage())
@@ -17,7 +17,7 @@ public class ClassVoyagePersistenceMapper {
     public ClassVoyageEntity toEntity(ClassVoyage domain) {
         if (domain == null) return null;
         return ClassVoyageEntity.builder()
-                .idClassVoyage(domain.getIdClassVoyage())
+                .id(domain.getIdClassVoyage())
                 .nom(domain.getNom())
                 .prix(domain.getPrix())
                 .idAgenceVoyage(domain.getIdAgenceVoyage())

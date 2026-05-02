@@ -46,12 +46,19 @@ public class AgencePersistenceAdapter implements AgencePersistencePort {
     @Override
     public Mono<AgenceVoyage> save(AgenceVoyage agence) {
         AgenceVoyageEntity entity = agenceMapper.toEntity(agence);
-        // Pour les nouvelles agences sans ID, générer un ID et marquer comme nouveau
         if (agence.getAgencyId() == null) {
             entity.setAgencyId(UUID.randomUUID());
             entity.setAsNew();
+            return agenceRepository.save(entity).map(agenceMapper::toDomain);
         }
-        return agenceRepository.save(entity)
+        
+        return agenceRepository.existsById(agence.getAgencyId())
+                .flatMap(exists -> {
+                    if (!exists) {
+                        entity.setAsNew();
+                    }
+                    return agenceRepository.save(entity);
+                })
                 .map(agenceMapper::toDomain);
     }
 

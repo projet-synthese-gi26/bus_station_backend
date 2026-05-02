@@ -98,11 +98,15 @@ public class ReservationController {
 
         @Operation(summary = "Annuler une réservation par un utilisateur")
         @PostMapping("/annuler/{reservationId}")
-        public Mono<ResponseEntity<Void>> annulerReservation(@PathVariable UUID reservationId) {
-                ReservationCancelDTO cancelDTO = new ReservationCancelDTO();
-                cancelDTO.setIdReservation(reservationId);
+        public Mono<ResponseEntity<Void>> annulerReservation(
+                        @PathVariable UUID reservationId,
+                        @RequestBody(required = false) ReservationCancelDTO cancelDTO) {
+                
+                ReservationCancelDTO finalDTO = cancelDTO != null ? cancelDTO : new ReservationCancelDTO();
+                finalDTO.setIdReservation(reservationId);
+                
                 return getCurrentUserId()
-                                .flatMap(userId -> annulationUseCase.cancelReservationByUser(cancelDTO, userId))
+                                .flatMap(userId -> annulationUseCase.cancelReservationByUser(finalDTO, userId))
                                 .then(Mono.just(ResponseEntity.noContent().build()));
         }
 

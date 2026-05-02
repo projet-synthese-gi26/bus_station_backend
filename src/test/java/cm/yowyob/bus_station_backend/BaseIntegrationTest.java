@@ -47,6 +47,9 @@ public abstract class BaseIntegrationTest {
     @MockBean
     protected ReactiveValueOperations<String, String> reactiveValueOperations;
 
+    @MockBean
+    protected cm.yowyob.bus_station_backend.application.port.out.PaymentPort paymentPort;
+
     protected String adminToken;
     protected String userToken;
     protected String bsmToken;
@@ -113,7 +116,7 @@ public abstract class BaseIntegrationTest {
         testBsmId = UUID.randomUUID();
 
         insertUserInDb(testUserId, "user@test.com", "USAGER");
-        insertUserInDb(testAdminId, "admin@test.com", "ADMIN");
+        insertUserInDb(testAdminId, "admin@test.com", "ADMIN,AGENCE_VOYAGE");
         insertUserInDb(testBsmId, "bsm@test.com", "BUS_STATION_MANAGER");
 
         userToken = jwtService.generateToken(
@@ -122,7 +125,7 @@ public abstract class BaseIntegrationTest {
 
         adminToken = jwtService.generateToken(
                 testAdminId.toString(),
-                Map.of("roles", List.of("ADMIN"), "userId", testAdminId));
+                Map.of("roles", List.of("ADMIN", "AGENCE_VOYAGE"), "userId", testAdminId));
 
         bsmToken = jwtService.generateToken(
                 testBsmId.toString(),

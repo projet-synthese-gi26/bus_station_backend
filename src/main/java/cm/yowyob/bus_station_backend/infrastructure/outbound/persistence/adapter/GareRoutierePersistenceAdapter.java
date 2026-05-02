@@ -29,9 +29,20 @@ public class GareRoutierePersistenceAdapter implements GareRoutierePersistencePo
 
     @Override
     public Mono<GareRoutiere> saveGareRoutiere(GareRoutiere gareRoutiere) {
-        return Mono.just(gareRoutiere)
-                .map(gareRoutierePersistenceMapper::toEntity)
-                .flatMap(gareRoutiereR2dbcRepository::save)
+        GareRoutiereEntity entity = gareRoutierePersistenceMapper.toEntity(gareRoutiere);
+        if (entity.getIdGareRoutiere() == null) {
+            entity.setIdGareRoutiere(UUID.randomUUID());
+            entity.setAsNew();
+            return gareRoutiereR2dbcRepository.save(entity).map(gareRoutierePersistenceMapper::toDomain);
+        }
+        
+        return gareRoutiereR2dbcRepository.existsById(entity.getIdGareRoutiere())
+                .flatMap(exists -> {
+                    if (!exists) {
+                        entity.setAsNew();
+                    }
+                    return gareRoutiereR2dbcRepository.save(entity);
+                })
                 .map(gareRoutierePersistenceMapper::toDomain);
     }
 
@@ -87,9 +98,6 @@ public class GareRoutierePersistenceAdapter implements GareRoutierePersistencePo
         return gareRoutiereR2dbcRepository.count();
     }
 
-    // src/main/java/cm/yowyob/bus_station_backend/infrastructure/outbound/persistence/adapter/GareRoutierePersistenceAdapter.java
-    // AJOUTER cette méthode à la fin de la classe (avant le `}` de fermeture)
-
     @Override
     public Mono<GareRoutiere> updateGareRoutiere(GareRoutiere gareRoutiere) {
         if (gareRoutiere.getIdGareRoutiere() == null) {
@@ -97,7 +105,6 @@ public class GareRoutierePersistenceAdapter implements GareRoutierePersistencePo
         }
         return gareRoutiereR2dbcRepository.findById(gareRoutiere.getIdGareRoutiere())
                 .flatMap(existing -> {
-                    // On préserve la version Optimistic-Lock + l'id
                     GareRoutiereEntity updated = gareRoutierePersistenceMapper.toEntity(gareRoutiere);
                     updated.setVersion(existing.getVersion());
                     return gareRoutiereR2dbcRepository.save(updated);

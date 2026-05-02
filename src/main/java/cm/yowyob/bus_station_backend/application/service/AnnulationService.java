@@ -48,12 +48,10 @@ public class AnnulationService implements AnnulationUseCase {
                 .switchIfEmpty(Mono.error(new ResourceNotFoundException("Voyage non trouvé")))
                 .flatMap(voyage -> reservationPort.findByVoyageId(voyage.getIdVoyage()).collectList()
                         .flatMap(reservations -> {
-                            if (reservations.isEmpty())
-                                return Mono.just(0.0);
-
                             // Saga d'annulation pour chaque réservation
+                            // Utiliser concatMap pour éviter les collisions sur l'objet Voyage
                             return Flux.fromIterable(reservations)
-                                    .flatMap(res -> {
+                                    .concatMap(res -> {
                                         ReservationCancelByAgenceDTO resDto = new ReservationCancelByAgenceDTO();
                                         resDto.setIdReservation(res.getIdReservation());
                                         resDto.setCanceled(cancelDTO.isCanceled());
@@ -64,8 +62,12 @@ public class AnnulationService implements AnnulationUseCase {
                                     .reduce(0.0, (acc, risk) -> acc + (risk > 0 ? risk : 0))
                                     .flatMap(totalRisk -> {
                                         if (cancelDTO.isCanceled()) {
-                                            voyage.setStatusVoyage(StatutVoyage.ANNULE);
-                                            return voyagePort.save(voyage)
+                                            // RE-FETCH le voyage pour avoir les compteurs à jour après les annulations de réservations
+                                            return voyagePort.findById(voyage.getIdVoyage())
+                                                    .flatMap(v -> {
+                                                        v.setStatusVoyage(StatutVoyage.ANNULE);
+                                                        return voyagePort.save(v);
+                                                    })
                                                     .then(notificationPort.sendNotification(
                                                             NotificationFactory.createVoyageCancelledEvent(voyage,
                                                                     cancelDTO.getAgenceVoyageId(),
@@ -118,7 +120,13 @@ public class AnnulationService implements AnnulationUseCase {
                     double montantSubstitut = calculateSubstitut(res, count, data.classVoyage.getPrix());
 
                     // Mise à jour domaine
-                    updateReservationStats(res, data.voyage, count, data.classVoyage.getPrix(), false);
+                    data.voyage.libererPlaces(count, res.getStatutReservation() == StatutReservation.CONFIRMER);
+                    
+                    res.setNbrPassager(res.getNbrPassager() - count);
+                    res.setMontantPaye(Math.max(0, res.getMontantPaye() - (count * data.classVoyage.getPrix())));
+                    res.setPrixTotal(res.getNbrPassager() * data.classVoyage.getPrix());
+                    if (res.getNbrPassager() <= 0)
+                        res.setStatutReservation(StatutReservation.ANNULER);
 
                     Historique hist = createHistorique(res, dto.getCauseAnnulation(), dto.getOrigineAnnulation(), taux,
                             now);
@@ -159,8 +167,7 @@ public class AnnulationService implements AnnulationUseCase {
                                     return Mono.just(tauxComp * res.getMontantPaye());
 
                                 // Saga Annulation Agence
-                                updateReservationStats(res, data.voyage, res.getNbrPassager(),
-                                        data.classVoyage.getPrix(), true);
+                                data.voyage.libererPlaces(res.getNbrPassager(), res.getStatutReservation() == StatutReservation.CONFIRMER);
                                 res.setStatutReservation(StatutReservation.ANNULER);
 
                                 Historique hist = createHistorique(res, cancelDTO.getCauseAnnulation(),
@@ -213,8 +220,15 @@ public class AnnulationService implements AnnulationUseCase {
                 .switchIfEmpty(Mono.error(new ResourceNotFoundException("Utilisateur introuvable")))
                 .flatMap(user -> {
                     List<RoleType> roles = user.getRoles();
-                    if (roles == null || (!roles.contains(RoleType.AGENCE_VOYAGE) &&
-                            !roles.contains(RoleType.ORGANISATION))) {
+                    if (roles == null) return Mono.just(false);
+
+                    // Platform ADMIN can manage anything
+                    if (roles.contains(RoleType.ADMIN)) {
+                        return Mono.just(true);
+                    }
+
+                    if (!roles.contains(RoleType.AGENCE_VOYAGE) &&
+                            !roles.contains(RoleType.ORGANISATION)) {
                         return Mono.just(false);
                     }
 
@@ -263,30 +277,6 @@ public class AnnulationService implements AnnulationUseCase {
         double currentPaye = res.getMontantPaye();
         double potential = count * unitPrice;
         return Math.min(currentPaye, potential);
-    }
-
-    private void updateReservationStats(Reservation res, Voyage v, int count, double unitPrice, boolean isFull) {
-        if (isFull) {
-            if (res.getStatutReservation() == StatutReservation.CONFIRMER) {
-                v.setNbrPlaceConfirm(v.getNbrPlaceConfirm() - res.getNbrPassager());
-                v.setNbrPlaceRestante(v.getNbrPlaceRestante() + res.getNbrPassager());
-            }
-            v.setNbrPlaceReserve(v.getNbrPlaceReserve() - res.getNbrPassager());
-            v.setNbrPlaceReservable(v.getNbrPlaceReservable() + res.getNbrPassager());
-        } else {
-            res.setNbrPassager(res.getNbrPassager() - count);
-            res.setMontantPaye(Math.max(0, res.getMontantPaye() - (count * unitPrice)));
-            res.setPrixTotal(res.getNbrPassager() * unitPrice);
-
-            v.setNbrPlaceReserve(v.getNbrPlaceReserve() - count);
-            v.setNbrPlaceReservable(v.getNbrPlaceReservable() + count);
-            if (res.getStatutReservation() == StatutReservation.CONFIRMER) {
-                v.setNbrPlaceConfirm(v.getNbrPlaceConfirm() - count);
-                v.setNbrPlaceRestante(v.getNbrPlaceRestante() + count);
-            }
-            if (res.getNbrPassager() <= 0)
-                res.setStatutReservation(StatutReservation.ANNULER);
-        }
     }
 
     private Mono<Void> processIndemnisation(UUID userId, UUID agenceId, double montant, double taux,

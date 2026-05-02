@@ -77,10 +77,8 @@ public class ReservationService implements ReservationUseCase {
                 return reservationPort.findByUserId(userId, pageable)
                                 .flatMap(this::enrichReservationPreview)
                                 .collectList()
-                                .zipWith(reservationPort.countReservationsByAgenceId(userId)) // Attention: adapter le
-                                                                                              // count pour User
-                                .map(tuple -> new PageImpl<>(tuple.getT1(), pageable, tuple.getT2())); // Approximation
-                                                                                                       // du count total
+                                .zipWith(reservationPort.countByUserId(userId))
+                                .map(tuple -> new PageImpl<>(tuple.getT1(), pageable, tuple.getT2()));
         }
 
         @Override

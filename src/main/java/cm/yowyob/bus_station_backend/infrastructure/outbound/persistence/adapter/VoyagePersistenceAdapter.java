@@ -134,8 +134,8 @@ public class VoyagePersistenceAdapter implements VoyagePersistencePort {
 
         ClassVoyageEntity entity = classMapper
                 .toEntity(classVoyage);
-        if (entity.getIdClassVoyage() == null) {
-            entity.setIdClassVoyage(UUID.randomUUID());
+        if (entity.getId() == null) {
+            entity.setId(UUID.randomUUID());
         }
         entity.setAsNew(); // toujours INSERT
         return classRepository.save(entity)
@@ -150,7 +150,7 @@ public class VoyagePersistenceAdapter implements VoyagePersistencePort {
 
     @Override
     public Flux<ClassVoyage> findAllClassVoyages(Pageable pageable) {
-        return classRepository.findAllPaged(pageable)
+        return classRepository.findAllBy(pageable)
                 .map(classMapper::toDomain);
     }
 

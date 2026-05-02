@@ -18,7 +18,7 @@ import java.util.UUID;
 public class ClassVoyageEntity implements Persistable<UUID> {
     @Id
     @Column("id")
-    private UUID idClassVoyage;
+    private UUID id;
 
     @Column("label")
     private String nom;
@@ -39,10 +39,10 @@ public class ClassVoyageEntity implements Persistable<UUID> {
     private boolean isNew = false;
 
     @Override
-    public UUID getId() { return idClassVoyage; }
+    public UUID getId() { return id; }
 
     @Override
-    public boolean isNew() { return isNew || idClassVoyage == null; }
+    public boolean isNew() { return isNew || id == null; }
 
     public void setAsNew() { this.isNew = true; }
 }

@@ -32,10 +32,18 @@ public class IndemnisationPersistenceAdapter implements IndemnisationPersistence
     @Override
     public Mono<Coupon> saveCoupon(Coupon coupon) {
         CouponEntity entity = couponMapper.toEntity(coupon);
-        if (coupon.getIdCoupon() != null)
+        if (coupon.getIdCoupon() == null) {
+            entity.setIdCoupon(UUID.randomUUID());
             entity.setAsNew();
-        return couponRepository
-                .save(entity)
+            return couponRepository.save(entity).map(couponMapper::toDomain);
+        }
+        return couponRepository.existsById(coupon.getIdCoupon())
+                .flatMap(exists -> {
+                    if (!exists) {
+                        entity.setAsNew();
+                    }
+                    return couponRepository.save(entity);
+                })
                 .map(couponMapper::toDomain);
     }
 
@@ -66,10 +74,18 @@ public class IndemnisationPersistenceAdapter implements IndemnisationPersistence
     @Override
     public Mono<SoldeIndemnisation> saveSolde(SoldeIndemnisation solde) {
         SoldeIndemnisationEntity entity = soldeMapper.toEntity(solde);
-        if (solde.getIdSolde() != null)
+        if (solde.getIdSolde() == null) {
+            entity.setIdSolde(UUID.randomUUID());
             entity.setAsNew();
-        return soldeRepository
-                .save(entity)
+            return soldeRepository.save(entity).map(soldeMapper::toDomain);
+        }
+        return soldeRepository.existsById(solde.getIdSolde())
+                .flatMap(exists -> {
+                    if (!exists) {
+                        entity.setAsNew();
+                    }
+                    return soldeRepository.save(entity);
+                })
                 .map(soldeMapper::toDomain);
     }
 

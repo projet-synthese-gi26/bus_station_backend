@@ -10,6 +10,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Component
@@ -259,7 +261,12 @@ public class DataSeeder {
               (user_id, username, prenom, nom, email, tel_number, password, roles, genre)
             VALUES
               (:id, :username, :first, :last, :email, :phone, :pwd, :roles, :gender)
-            ON CONFLICT (username) DO NOTHING
+            ON CONFLICT (user_id) DO UPDATE SET 
+                username = EXCLUDED.username,
+                email = EXCLUDED.email,
+                tel_number = EXCLUDED.tel_number,
+                password = EXCLUDED.password,
+                roles = EXCLUDED.roles
             """;
 
         return
@@ -316,7 +323,7 @@ public class DataSeeder {
                 .bind("last", "KAMGA").bind("email", "a.kamga@btu-transport.cm").bind("phone", "656112233")
                 .bind("pwd", pwd).bind("roles", "EMPLOYE").bind("gender", "MALE").then())
             .then(db.sql(sql).bind("id", USER_CHAUFF_8).bind("username", "chauffeur_roger").bind("first", "Roger")
-                .bind("last", "TIENTCHEU").bind("email", "r.tientcheu@btu-transport.cm").bind("phone", "656445566")
+                .bind("last", "TIENTCHEU").bind("email", "r.tientcheu@btu-transport.cm").bind("phone", "656445577")
                 .bind("pwd", pwd).bind("roles", "EMPLOYE").bind("gender", "MALE").then())
             .then(db.sql(sql).bind("id", USER_CHAUFF_10).bind("username", "chauffeur_eric").bind("first", "Eric")
                 .bind("last", "ZAMBO").bind("email", "e.zambo@confortlines.cm").bind("phone", "654334455")
@@ -475,7 +482,7 @@ public class DataSeeder {
             db.sql(sqlEmp)
                 .bind("id", EMP_1).bind("userId", USER_EMP_4).bind("agenceId", AGENCY_1)
                 .bind("poste", "Caissière").bind("dept", "Finance")
-                .bind("dateEmb", "2020-01-06").bind("statut", "ACTIF")
+                .bind("dateEmb", OffsetDateTime.parse("2020-01-06T00:00:00Z")).bind("statut", "ACTIF")
                 .then()
             .doOnSuccess(v -> log.info("  ✔ Employés insérés (1)"));
     }
@@ -492,28 +499,28 @@ public class DataSeeder {
         return
             db.sql(sqlChauff)
                 .bind("id", CHAUFF_1).bind("userId", USER_CHAUFF_1).bind("agenceId", AGENCY_1)
-                .bind("statut", "ACTIF").bind("experience", 10).bind("permis", "CNI-CM-1234567").then()
+                .bind("statut", "LIBRE").bind("experience", 10).bind("permis", "CNI-CM-1234567").then()
             .then(db.sql(sqlChauff)
                 .bind("id", CHAUFF_2).bind("userId", USER_CHAUFF_2).bind("agenceId", AGENCY_1)
-                .bind("statut", "ACTIF").bind("experience", 5).bind("permis", "CNI-CM-2345678").then())
+                .bind("statut", "LIBRE").bind("experience", 5).bind("permis", "CNI-CM-2345678").then())
             .then(db.sql(sqlChauff)
                 .bind("id", CHAUFF_3).bind("userId", USER_CHAUFF_3).bind("agenceId", AGENCY_1)
-                .bind("statut", "ACTIF").bind("experience", 8).bind("permis", "CNI-CM-3456789").then())
+                .bind("statut", "LIBRE").bind("experience", 8).bind("permis", "CNI-CM-3456789").then())
             .then(db.sql(sqlChauff)
                 .bind("id", CHAUFF_4).bind("userId", USER_CHAUFF_4).bind("agenceId", AGENCY_2)
-                .bind("statut", "ACTIF").bind("experience", 15).bind("permis", "CNI-CM-5678901").then())
+                .bind("statut", "LIBRE").bind("experience", 15).bind("permis", "CNI-CM-5678901").then())
             .then(db.sql(sqlChauff)
                 .bind("id", CHAUFF_5).bind("userId", USER_CHAUFF_5).bind("agenceId", AGENCY_2)
-                .bind("statut", "ACTIF").bind("experience", 7).bind("permis", "CNI-CM-6789012").then())
+                .bind("statut", "LIBRE").bind("experience", 7).bind("permis", "CNI-CM-6789012").then())
             .then(db.sql(sqlChauff)
                 .bind("id", CHAUFF_7).bind("userId", USER_CHAUFF_7).bind("agenceId", AGENCY_3)
-                .bind("statut", "ACTIF").bind("experience", 12).bind("permis", "CNI-CM-7890123").then())
+                .bind("statut", "LIBRE").bind("experience", 12).bind("permis", "CNI-CM-7890123").then())
             .then(db.sql(sqlChauff)
                 .bind("id", CHAUFF_8).bind("userId", USER_CHAUFF_8).bind("agenceId", AGENCY_3)
-                .bind("statut", "ACTIF").bind("experience", 9).bind("permis", "CNI-CM-8901234").then())
+                .bind("statut", "LIBRE").bind("experience", 9).bind("permis", "CNI-CM-8901234").then())
             .then(db.sql(sqlChauff)
                 .bind("id", CHAUFF_10).bind("userId", USER_CHAUFF_10).bind("agenceId", AGENCY_4)
-                .bind("statut", "ACTIF").bind("experience", 6).bind("permis", "CNI-CM-9012345").then())
+                .bind("statut", "LIBRE").bind("experience", 6).bind("permis", "CNI-CM-9012345").then())
             .doOnSuccess(v -> log.info("  ✔ Chauffeurs insérés (8)"));
     }
 
@@ -540,8 +547,8 @@ public class DataSeeder {
             db.sql(sql).bind("id", VOY_1).bind("titre", "Yaoundé → Douala — Classique Express")
                 .bind("desc", "Départ de Mvan à 07h00. Voyage direct, climatisé. Arrivée Gare de Bessengué.")
                 .bind("dep", "Yaoundé").bind("arr", "Douala").bind("ptDep", "Gare Routière de Mvan").bind("ptArr", "Gare de Bessengué")
-                .bind("statut", "PUBLIE").bind("pubDate", "2026-04-25T08:00:00Z").bind("depDate", "2026-05-10T07:00:00Z")
-                .bind("limResa", "2026-05-09T23:59:00Z").bind("limConf", "2026-05-09T23:59:00Z")
+                .bind("statut", "PUBLIE").bind("pubDate", OffsetDateTime.parse("2026-04-25T08:00:00Z")).bind("depDate", OffsetDateTime.parse("2026-05-10T07:00:00Z"))
+                .bind("limResa", OffsetDateTime.parse("2026-05-09T23:59:00Z")).bind("limConf", OffsetDateTime.parse("2026-05-09T23:59:00Z"))
                 .bind("reservable", 53).bind("restante", 23).bind("reserve", 30).bind("confirm", 28)
                 .bind("duree", 14400L).bind("amenities", "AC,USB,COMFORTABLE_SEATS,LUGGAGE_STORAGE")
                 .bind("smallImg", "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400")
@@ -550,8 +557,8 @@ public class DataSeeder {
             .then(db.sql(sql).bind("id", VOY_2).bind("titre", "Yaoundé → Douala — Confort Midi")
                 .bind("desc", "Départ de Mvan à 12h00. Voyage express sans arrêt. Arrivée Bessengué.")
                 .bind("dep", "Yaoundé").bind("arr", "Douala").bind("ptDep", "Gare Routière de Mvan").bind("ptArr", "Gare de Bessengué")
-                .bind("statut", "PUBLIE").bind("pubDate", "2026-04-25T08:00:00Z").bind("depDate", "2026-05-10T12:00:00Z")
-                .bind("limResa", "2026-05-09T23:59:00Z").bind("limConf", "2026-05-09T23:59:00Z")
+                .bind("statut", "PUBLIE").bind("pubDate", OffsetDateTime.parse("2026-04-25T08:00:00Z")).bind("depDate", OffsetDateTime.parse("2026-05-10T12:00:00Z"))
+                .bind("limResa", OffsetDateTime.parse("2026-05-09T23:59:00Z")).bind("limConf", OffsetDateTime.parse("2026-05-09T23:59:00Z"))
                 .bind("reservable", 53).bind("restante", 23).bind("reserve", 30).bind("confirm", 28)
                 .bind("duree", 13500L).bind("amenities", "AC,USB,COMFORTABLE_SEATS,WIFI")
                 .bind("smallImg", "https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=400")
@@ -560,8 +567,8 @@ public class DataSeeder {
             .then(db.sql(sql).bind("id", VOY_3).bind("titre", "Yaoundé → Douala — VIP Standard")
                 .bind("desc", "Service VIP direct Yaoundé–Douala. Sièges cuir, Wi-Fi haut débit, collation offerte.")
                 .bind("dep", "Yaoundé").bind("arr", "Douala").bind("ptDep", "Gare du Lac Municipal").bind("ptArr", "Gare de Bessengué")
-                .bind("statut", "PUBLIE").bind("pubDate", "2026-04-24T10:00:00Z").bind("depDate", "2026-05-10T08:00:00Z")
-                .bind("limResa", "2026-05-09T23:59:00Z").bind("limConf", "2026-05-09T23:59:00Z")
+                .bind("statut", "PUBLIE").bind("pubDate", OffsetDateTime.parse("2026-04-24T10:00:00Z")).bind("depDate", OffsetDateTime.parse("2026-05-10T08:00:00Z"))
+                .bind("limResa", OffsetDateTime.parse("2026-05-09T23:59:00Z")).bind("limConf", OffsetDateTime.parse("2026-05-09T23:59:00Z"))
                 .bind("reservable", 28).bind("restante", 6).bind("reserve", 22).bind("confirm", 20)
                 .bind("duree", 12600L).bind("amenities", "AC,WIFI,USB,COMFORTABLE_SEATS,MEAL_SERVICE,ENTERTAINMENT,POWER_OUTLETS")
                 .bind("smallImg", "https://images.unsplash.com/photo-1557223562-6c77ef16210f?w=400")
@@ -570,8 +577,8 @@ public class DataSeeder {
             .then(db.sql(sql).bind("id", VOY_4).bind("titre", "Yaoundé → Douala — Nuit Confort")
                 .bind("desc", "Voyage de nuit climatisé. Couvertures et oreiller fournis.")
                 .bind("dep", "Yaoundé").bind("arr", "Douala").bind("ptDep", "Gare Routière de Mvan").bind("ptArr", "Gare de Bonabéri")
-                .bind("statut", "PUBLIE").bind("pubDate", "2026-04-25T08:00:00Z").bind("depDate", "2026-05-10T22:00:00Z")
-                .bind("limResa", "2026-05-10T18:00:00Z").bind("limConf", "2026-05-10T18:00:00Z")
+                .bind("statut", "PUBLIE").bind("pubDate", OffsetDateTime.parse("2026-04-25T08:00:00Z")).bind("depDate", OffsetDateTime.parse("2026-05-10T22:00:00Z"))
+                .bind("limResa", OffsetDateTime.parse("2026-05-10T18:00:00Z")).bind("limConf", OffsetDateTime.parse("2026-05-10T18:00:00Z"))
                 .bind("reservable", 44).bind("restante", 6).bind("reserve", 38).bind("confirm", 35)
                 .bind("duree", 16200L).bind("amenities", "AC,COMFORTABLE_SEATS,LUGGAGE_STORAGE")
                 .bind("smallImg", "https://images.unsplash.com/photo-1494515843206-f3117d3f51b7?w=400")
@@ -580,8 +587,8 @@ public class DataSeeder {
             .then(db.sql(sql).bind("id", VOY_5).bind("titre", "Bafoussam → Douala — Classique")
                 .bind("desc", "Liaison directe Bafoussam–Douala via Bafang. Départ de la Gare de Banengo.")
                 .bind("dep", "Bafoussam").bind("arr", "Douala").bind("ptDep", "Gare de Banengo").bind("ptArr", "Gare de Bonabéri")
-                .bind("statut", "PUBLIE").bind("pubDate", "2026-04-26T07:00:00Z").bind("depDate", "2026-05-11T06:00:00Z")
-                .bind("limResa", "2026-05-10T23:59:00Z").bind("limConf", "2026-05-10T23:59:00Z")
+                .bind("statut", "PUBLIE").bind("pubDate", OffsetDateTime.parse("2026-04-26T07:00:00Z")).bind("depDate", OffsetDateTime.parse("2026-05-11T06:00:00Z"))
+                .bind("limResa", OffsetDateTime.parse("2026-05-10T23:59:00Z")).bind("limConf", OffsetDateTime.parse("2026-05-10T23:59:00Z"))
                 .bind("reservable", 48).bind("restante", 23).bind("reserve", 25).bind("confirm", 20)
                 .bind("duree", 18000L).bind("amenities", "AC,COMFORTABLE_SEATS,LUGGAGE_STORAGE")
                 .bind("smallImg", "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400")
@@ -590,8 +597,8 @@ public class DataSeeder {
             .then(db.sql(sql).bind("id", VOY_6).bind("titre", "Yaoundé → Douala — Classique Matin (12 mai)")
                 .bind("desc", "Départ matinal de la Gare de Mvan. Arrêt à Edéa. Service classique.")
                 .bind("dep", "Yaoundé").bind("arr", "Douala").bind("ptDep", "Gare Routière de Mvan").bind("ptArr", "Gare de Bonabéri")
-                .bind("statut", "PUBLIE").bind("pubDate", "2026-04-27T08:00:00Z").bind("depDate", "2026-05-12T06:00:00Z")
-                .bind("limResa", "2026-05-11T23:59:00Z").bind("limConf", "2026-05-11T23:59:00Z")
+                .bind("statut", "PUBLIE").bind("pubDate", OffsetDateTime.parse("2026-04-27T08:00:00Z")).bind("depDate", OffsetDateTime.parse("2026-05-12T06:00:00Z"))
+                .bind("limResa", OffsetDateTime.parse("2026-05-11T23:59:00Z")).bind("limConf", OffsetDateTime.parse("2026-05-11T23:59:00Z"))
                 .bind("reservable", 68).bind("restante", 56).bind("reserve", 12).bind("confirm", 10)
                 .bind("duree", 15300L).bind("amenities", "AC,USB,COMFORTABLE_SEATS")
                 .bind("smallImg", "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400")
@@ -600,8 +607,8 @@ public class DataSeeder {
             .then(db.sql(sql).bind("id", VOY_7).bind("titre", "Douala → Yaoundé — VIP Premium")
                 .bind("desc", "Retour VIP Douala–Yaoundé en fin de journée. Plateau dînatoire inclus. Bus panoramique.")
                 .bind("dep", "Douala").bind("arr", "Yaoundé").bind("ptDep", "Gare de Bessengué").bind("ptArr", "Gare du Lac Municipal")
-                .bind("statut", "PUBLIE").bind("pubDate", "2026-04-26T09:00:00Z").bind("depDate", "2026-05-11T17:00:00Z")
-                .bind("limResa", "2026-05-11T12:00:00Z").bind("limConf", "2026-05-11T12:00:00Z")
+                .bind("statut", "PUBLIE").bind("pubDate", OffsetDateTime.parse("2026-04-26T09:00:00Z")).bind("depDate", OffsetDateTime.parse("2026-05-11T17:00:00Z"))
+                .bind("limResa", OffsetDateTime.parse("2026-05-11T12:00:00Z")).bind("limConf", OffsetDateTime.parse("2026-05-11T12:00:00Z"))
                 .bind("reservable", 33).bind("restante", 13).bind("reserve", 20).bind("confirm", 18)
                 .bind("duree", 12600L).bind("amenities", "AC,WIFI,USB,MEAL_SERVICE,ENTERTAINMENT,POWER_OUTLETS,COMFORTABLE_SEATS")
                 .bind("smallImg", "https://images.unsplash.com/photo-1557223562-6c77ef16210f?w=400")
@@ -610,8 +617,8 @@ public class DataSeeder {
             .then(db.sql(sql).bind("id", VOY_8).bind("titre", "Yaoundé → Mbalmayo — Standard Matin")
                 .bind("desc", "Liaison rapide Yaoundé–Mbalmayo. Départ de la Gare du Lac Municipal.")
                 .bind("dep", "Yaoundé").bind("arr", "Mbalmayo").bind("ptDep", "Gare du Lac Municipal").bind("ptArr", "Gare de Mbalmayo")
-                .bind("statut", "PUBLIE").bind("pubDate", "2026-04-25T08:00:00Z").bind("depDate", "2026-05-10T07:30:00Z")
-                .bind("limResa", "2026-05-09T23:59:00Z").bind("limConf", "2026-05-09T23:59:00Z")
+                .bind("statut", "PUBLIE").bind("pubDate", OffsetDateTime.parse("2026-04-25T08:00:00Z")).bind("depDate", OffsetDateTime.parse("2026-05-10T07:30:00Z"))
+                .bind("limResa", OffsetDateTime.parse("2026-05-09T23:59:00Z")).bind("limConf", OffsetDateTime.parse("2026-05-09T23:59:00Z"))
                 .bind("reservable", 16).bind("restante", 6).bind("reserve", 10).bind("confirm", 9)
                 .bind("duree", 5400L).bind("amenities", "AC,COMFORTABLE_SEATS")
                 .bind("smallImg", "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400")
@@ -666,19 +673,19 @@ public class DataSeeder {
         return
             db.sql(sql).bind("id", AFF_1).bind("gareId", GARE_1).bind("agenceId", AGENCY_1)
                 .bind("agenceName", "General Express Yaoundé").bind("statut", "ACTIF")
-                .bind("echeance", "2026-05-01").bind("montant", 75000.0).then()
+                .bind("echeance", LocalDate.parse("2026-05-01")).bind("montant", 75000.0).then()
             .then(db.sql(sql).bind("id", AFF_2).bind("gareId", GARE_4).bind("agenceId", AGENCY_2)
                 .bind("agenceName", "Touristique Express VIP Douala").bind("statut", "ACTIF")
-                .bind("echeance", "2026-05-01").bind("montant", 90000.0).then())
+                .bind("echeance", LocalDate.parse("2026-05-01")).bind("montant", 90000.0).then())
             .then(db.sql(sql).bind("id", AFF_3).bind("gareId", GARE_5).bind("agenceId", AGENCY_3)
                 .bind("agenceName", "BTU - Bafoussam Transit Unité").bind("statut", "ACTIF")
-                .bind("echeance", "2026-05-01").bind("montant", 55000.0).then())
+                .bind("echeance", LocalDate.parse("2026-05-01")).bind("montant", 55000.0).then())
             .then(db.sql(sql).bind("id", AFF_4).bind("gareId", GARE_2).bind("agenceId", AGENCY_4)
                 .bind("agenceName", "Confort Lines - Axe Centre-Sud").bind("statut", "ACTIF")
-                .bind("echeance", "2026-05-01").bind("montant", 65000.0).then())
+                .bind("echeance", LocalDate.parse("2026-05-01")).bind("montant", 65000.0).then())
             .then(db.sql(sql).bind("id", AFF_5).bind("gareId", GARE_4).bind("agenceId", AGENCY_1)
                 .bind("agenceName", "General Express Yaoundé").bind("statut", "ACTIF")
-                .bind("echeance", "2026-05-01").bind("montant", 80000.0).then())
+                .bind("echeance", LocalDate.parse("2026-05-01")).bind("montant", 80000.0).then())
             .doOnSuccess(v -> log.info("  ✔ Affiliations insérées (5)"));
     }
 
@@ -697,19 +704,19 @@ public class DataSeeder {
         return
             db.sql(sql).bind("id", POL_1).bind("gareId", GARE_1).bind("nom", "Règlement intérieur — Gare de Mvan")
                 .bind("desc", "Toute agence affiliée s'engage à respecter les horaires de départ affichés.")
-                .bindNull("montant", Double.class).bind("dateEffet", "2024-01-01").bind("type", "POLITIQUE").then()
+                .bindNull("montant", Double.class).bind("dateEffet", LocalDate.parse("2024-01-01")).bind("type", "POLITIQUE").then()
             .then(db.sql(sql).bind("id", POL_2).bind("gareId", GARE_1).bind("nom", "Taxe d'affiliation mensuelle — Mvan")
                 .bind("desc", "Chaque agence affiliée à la Gare de Mvan s'acquitte d'une taxe mensuelle d'affiliation fixée à 75 000 FCFA.")
-                .bind("montant", 75000.0).bind("dateEffet", "2024-01-01").bind("type", "TAXE").then())
+                .bind("montant", 75000.0).bind("dateEffet", LocalDate.parse("2024-01-01")).bind("type", "TAXE").then())
             .then(db.sql(sql).bind("id", POL_3).bind("gareId", GARE_1).bind("nom", "Frais de quai par départ — Mvan")
                 .bind("desc", "Un frais de quai de 500 FCFA est prélevé par départ effectif.")
-                .bind("montant", 500.0).bind("dateEffet", "2024-01-01").bind("type", "TAXE").then())
+                .bind("montant", 500.0).bind("dateEffet", LocalDate.parse("2024-01-01")).bind("type", "TAXE").then())
             .then(db.sql(sql).bind("id", POL_4).bind("gareId", GARE_2).bind("nom", "Politique de sécurité — Gare du Lac")
                 .bind("desc", "Identification obligatoire des passagers à l'embarquement.")
-                .bindNull("montant", Double.class).bind("dateEffet", "2023-06-01").bind("type", "POLITIQUE").then())
+                .bindNull("montant", Double.class).bind("dateEffet", LocalDate.parse("2023-06-01")).bind("type", "POLITIQUE").then())
             .then(db.sql(sql).bind("id", POL_5).bind("gareId", GARE_2).bind("nom", "Taxe d'affiliation — Gare du Lac")
                 .bind("desc", "Taxe mensuelle d'affiliation fixée à 65 000 FCFA pour toute agence occupant un guichet à la Gare du Lac.")
-                .bind("montant", 65000.0).bind("dateEffet", "2023-06-01").bind("type", "TAXE").then())
+                .bind("montant", 65000.0).bind("dateEffet", LocalDate.parse("2023-06-01")).bind("type", "TAXE").then())
             .doOnSuccess(v -> log.info("  ✔ Politiques & taxes insérées (5)"));
     }
 
@@ -729,15 +736,15 @@ public class DataSeeder {
             db.sql(sql).bind("id", ALERTE_1).bind("gareId", GARE_2).bind("agenceId", AGENCY_4)
                 .bind("bsmId", USER_BSM_2).bind("type", "TAX_REMINDER")
                 .bind("message", "Rappel : votre taxe d'affiliation du mois de mars 2026 (65 000 FCFA) est en retard. Merci de régulariser avant le 10 mai 2026.")
-                .bind("isLu", true).bind("createdAt", "2026-04-15T10:00:00Z").then()
+                .bind("isLu", true).bind("createdAt", OffsetDateTime.parse("2026-04-15T10:00:00Z")).then()
             .then(db.sql(sql).bind("id", ALERTE_2).bind("gareId", GARE_2).bind("agenceId", AGENCY_4)
                 .bind("bsmId", USER_BSM_2).bind("type", "ALERTE_GENERALE")
                 .bind("message", "Votre agence a été signalée pour un départ non déclaré le 22 avril 2026 à 14h30. Un deuxième manquement entraînera une suspension temporaire.")
-                .bind("isLu", false).bind("createdAt", "2026-04-23T09:00:00Z").then())
+                .bind("isLu", false).bind("createdAt", OffsetDateTime.parse("2026-04-23T09:00:00Z")).then())
             .then(db.sql(sql).bind("id", ALERTE_3).bind("gareId", GARE_1).bind("agenceId", AGENCY_1)
                 .bind("bsmId", USER_BSM_1).bind("type", "ALERTE_GENERALE")
                 .bind("message", "Information : la Gare de Mvan procédera à des travaux de rénovation du 5 au 10 juin 2026. Les départs seront temporairement relocalisés vers la plateforme Est.")
-                .bind("isLu", true).bind("createdAt", "2026-04-20T11:00:00Z").then())
+                .bind("isLu", true).bind("createdAt", OffsetDateTime.parse("2026-04-20T11:00:00Z")).then())
             .doOnSuccess(v -> log.info("  ✔ Alertes insérées (3)"));
     }
 }

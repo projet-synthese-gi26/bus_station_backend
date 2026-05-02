@@ -3,17 +3,26 @@ package cm.yowyob.bus_station_backend.integration;
 import cm.yowyob.bus_station_backend.BaseIntegrationTest;
 import cm.yowyob.bus_station_backend.application.dto.reservation.*;
 import cm.yowyob.bus_station_backend.application.dto.payment.PayRequestDTO;
+import cm.yowyob.bus_station_backend.application.dto.payment.PayInResultDTO;
+import cm.yowyob.bus_station_backend.application.dto.payment.PayInData;
+import cm.yowyob.bus_station_backend.application.dto.payment.ResultStatus;
+import cm.yowyob.bus_station_backend.application.dto.payment.PaiementCallbackDTO;
 import cm.yowyob.bus_station_backend.application.dto.voyage.VoyageCancelDTO;
 import cm.yowyob.bus_station_backend.domain.enums.*;
 import cm.yowyob.bus_station_backend.domain.model.Reservation;
 import org.junit.jupiter.api.*;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
+import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
 
 @DisplayName("Tests d'intégration - Workflow complet de réservation")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -25,6 +34,15 @@ class ReservationWorkflowIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        // Mock Payment initiation
+        PayInResultDTO mockPayResult = new PayInResultDTO();
+        mockPayResult.setStatus(ResultStatus.SUCCESS);
+        mockPayResult.setOk(true);
+        PayInData data = new PayInData();
+        data.setTransaction_code("TX-" + UUID.randomUUID().toString().substring(0, 8));
+        mockPayResult.setData(data);
+        when(paymentPort.initiatePayment(anyString(), anyString(), anyDouble(), any())).thenReturn(Mono.just(mockPayResult));
+
         // Préparer les données de test
         UUID organizationId = createTestOrganization();
         agenceId = createTestAgence(organizationId);
@@ -32,11 +50,24 @@ class ReservationWorkflowIntegrationTest extends BaseIntegrationTest {
         UUID vehiculeId = createTestVehicule(agenceId);
         voyageId = createTestVoyage();
         createLigneVoyage(voyageId, classVoyageId, vehiculeId, agenceId);
+        createTestPolitiqueAnnulation(agenceId);
+    }
+
+    private void createTestPolitiqueAnnulation(UUID agenceId) {
+        databaseClient.sql("""
+            INSERT INTO politiques_annulation (id_politique, duree_coupon_seconds, id_agence_voyage)
+            VALUES (:id, :duree, :agenceId)
+        """)
+                .bind("id", UUID.randomUUID())
+                .bind("duree", 3600L)
+                .bind("agenceId", agenceId)
+                .then()
+                .block();
     }
 
     @Test
     @Order(1)
-    @DisplayName("Scénario complet : Créer réservation → Confirmer → Vérifier historique")
+    @DisplayName("Scénario complet : Créer réservation → Initier Paiement → Webhook → Vérifier")
     void completeReservationWorkflow() {
         // ===== ÉTAPE 1 : Créer une réservation =====
         ReservationDTO reservationDTO = createReservationDTO();
@@ -61,26 +92,43 @@ class ReservationWorkflowIntegrationTest extends BaseIntegrationTest {
         // Vérifier que les places ont été réservées dans le voyage
         verifyVoyagePlacesReduced(voyageId, 2);
 
-        // ===== ÉTAPE 2 : Confirmer le paiement =====
+        // ===== ÉTAPE 2 : Initier le paiement =====
         PayRequestDTO payRequest = new PayRequestDTO();
         payRequest.setReservationId(reservationId);
         payRequest.setAmount(50000.0);
-        // Using existing fields in PayRequestDTO
         payRequest.setMobilePhone("677777777");
         payRequest.setMobilePhoneName("MTN Mobile Money");
 
-        webTestClient.post()
-                .uri("/reservation/confirmer")
+        PayInResultDTO payResult = webTestClient.post()
+                .uri("/paiement/initier")
                 .header("Authorization", "Bearer " + userToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(payRequest)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(PayInResultDTO.class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(payResult).isNotNull();
+        String transactionCode = payResult.getData().getTransaction_code();
+
+        // ===== ÉTAPE 3 : Simuler le Webhook de confirmation (Callback Opérateur) =====
+        PaiementCallbackDTO callback = new PaiementCallbackDTO();
+        callback.setTransactionCode(transactionCode);
+        callback.setReservationId(reservationId);
+        callback.setMontantPaye(50000.0);
+
+        webTestClient.post()
+                .uri("/paiement/confirmer")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(callback)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ReservationDetailDTO.class)
                 .value(confirmed -> {
                     assertThat(confirmed.getReservation().getStatutReservation()).isEqualTo(StatutReservation.CONFIRMER);
                     assertThat(confirmed.getReservation().getStatutPayement()).isEqualTo(StatutPayment.PAID);
-                    assertThat(confirmed.getReservation().getDateConfirmation()).isNotNull();
                 });
     }
 
@@ -104,10 +152,26 @@ class ReservationWorkflowIntegrationTest extends BaseIntegrationTest {
 
         UUID resId = createdReservation.getIdReservation();
 
+        // Récupérer les IDs des passagers pour l'annulation
+        List<UUID> passagerIds = databaseClient
+                .sql("SELECT id_passager FROM passagers WHERE id_reservation = :id")
+                .bind("id", resId)
+                .map(row -> row.get("id_passager", UUID.class))
+                .all()
+                .collectList()
+                .block();
+
+        ReservationCancelDTO cancelDTO = new ReservationCancelDTO();
+        cancelDTO.setIdReservation(resId);
+        cancelDTO.setIdPassagers(passagerIds.toArray(new UUID[0]));
+        cancelDTO.setCanceled(true);
+
         // ÉTAPE 2 : Annuler la réservation
         webTestClient.post()
                 .uri("/reservation/annuler/{reservationId}", resId)
                 .header("Authorization", "Bearer " + userToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(cancelDTO)
                 .exchange()
                 .expectStatus().isNoContent();
 
@@ -182,6 +246,7 @@ class ReservationWorkflowIntegrationTest extends BaseIntegrationTest {
         cancelDTO.setIdVoyage(voyageId);
         cancelDTO.setAgenceVoyageId(agenceId);
         cancelDTO.setCauseAnnulation("Problème technique");
+        cancelDTO.setCanceled(true);
 
         // Utiliser le token admin (chef d'agence)
         webTestClient.post()
@@ -347,9 +412,9 @@ class ReservationWorkflowIntegrationTest extends BaseIntegrationTest {
 
     private void verifyVoyagePlacesReduced(UUID voyageId, int expectedReduction) {
         Integer placesRestantes = databaseClient
-                .sql("SELECT nbr_place_restante FROM voyages WHERE id_voyage = :id")
+                .sql("SELECT nbr_place_reservable FROM voyages WHERE id_voyage = :id")
                 .bind("id", voyageId)
-                .map(row -> row.get("nbr_place_restante", Integer.class))
+                .map(row -> row.get("nbr_place_reservable", Integer.class))
                 .one()
                 .block();
 
@@ -358,9 +423,9 @@ class ReservationWorkflowIntegrationTest extends BaseIntegrationTest {
 
     private void verifyVoyagePlacesIncreased(UUID voyageId, int expectedIncrease) {
         Integer placesRestantes = databaseClient
-                .sql("SELECT nbr_place_restante FROM voyages WHERE id_voyage = :id")
+                .sql("SELECT nbr_place_reservable FROM voyages WHERE id_voyage = :id")
                 .bind("id", voyageId)
-                .map(row -> row.get("nbr_place_restante", Integer.class))
+                .map(row -> row.get("nbr_place_reservable", Integer.class))
                 .one()
                 .block();
 

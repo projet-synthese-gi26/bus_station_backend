@@ -43,6 +43,7 @@ public interface ReservationPersistencePort {
 
     // Agrégations pour les statistiques
     Mono<Long> countReservationsByAgenceId(UUID agenceId);
+    Mono<Long> countByUserId(UUID userId);
     Mono<Long> countAllReservations();
     Mono<Double> sumRevenusByAgenceId(UUID agenceId);
 }

@@ -10,6 +10,7 @@ public class ReservationPersistenceMapper {
     public Reservation toDomain(ReservationEntity entity) {
         if (entity == null) { return null; }
         return Reservation.builder().idReservation(entity.getIdReservation())
+                .idUser(entity.getIdUser())
                 .dateReservation(entity.getDateReservation())
                 .dateConfirmation(entity.getDateConfirmation())
                 .idVoyage(entity.getIdVoyage())

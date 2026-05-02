@@ -66,7 +66,7 @@ public class VoyageService implements VoyageUseCase {
 
     @Override
     public Mono<VoyageDetailsDTO> createVoyage(VoyageCreateRequestDTO dto, UUID currentUserId) {
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
         log.info("Création d'un voyage par l'utilisateur: {}", currentUserId);
 
         return Mono.zip(
