@@ -159,19 +159,9 @@ public class DataSeeder {
 
     @EventListener(ApplicationReadyEvent.class)
     public void seed() {
-        db.sql("SELECT COUNT(*) FROM users WHERE user_id = :id").bind("id", USER_BSM_1)
-                .map((row, meta) -> row.get(0, Long.class))
-                .one()
-                .defaultIfEmpty(0L)
-                .flatMap(count -> {
-                    if (count > 0) {
-                        log.info("✅ Seeder — données déjà présentes, skip.");
-                        return Mono.empty();
-                    }
-                    log.info("🌱 Seeder — insertion des données de référence...");
-                    String pwd = passwordEncoder.encode("Password123");
-                    return runAll(pwd);
-                })
+        log.info("🌱 Seeder — démarrage...");
+        String pwd = passwordEncoder.encode("Password123");
+        runAll(pwd)
                 .doOnSuccess(v -> log.info("🎉 Seeder terminé avec succès !"))
                 .doOnError(e -> log.error("❌ Erreur Seeder : {}", e.getMessage(), e))
                 .subscribe();
@@ -202,38 +192,38 @@ public class DataSeeder {
               (id_gare_routiere, nom_gare_routiere, ville, quartier, description, horaires, services, manager_id, version)
             VALUES
               (:id, :nom, :ville, :quartier, :desc, :horaires, :services, :manager, 0)
-            ON CONFLICT (id_gare_routiere) DO NOTHING
+            ON CONFLICT (id_gare_routiere) DO UPDATE SET services = EXCLUDED.services
             """;
 
         return db.sql(sql).bind("id", GARE_1).bind("nom", "Gare Routière de Mvan")
                 .bind("ville", "Yaoundé").bind("quartier", "Mvan")
                 .bind("desc", "Principal terminus Sud de Yaoundé, reliant la capitale aux villes du littoral, du Sud et du Centre.")
                 .bind("horaires", "Lun–Dim : 04h00–23h00")
-                .bind("services", "Salle d'attente climatisée,Consigne bagages,Restauration,Wi-Fi gratuit,Toilettes,Parking sécurisé")
+                .bind("services", "SALLE_ATTENTE,CLIMATISATION,CONSIGNE,RESTAURATION,WIFI,TOILETTES,PARKING,SECURITE")
                 .bind("manager", USER_BSM_1).then()
                 .then(db.sql(sql).bind("id", GARE_2).bind("nom", "Gare Routière du Lac Municipal")
                         .bind("ville", "Yaoundé").bind("quartier", "Centre-ville")
                         .bind("desc", "Gare centrale de Yaoundé, idéalement située en plein cœur de la ville.")
                         .bind("horaires", "Lun–Dim : 05h00–22h00")
-                        .bind("services", "Salle d'attente,Restauration rapide,Toilettes,Parking,Billetterie électronique")
+                        .bind("services", "SALLE_ATTENTE,RESTAURATION,TOILETTES,PARKING,BILLETTERIE_ELECTRONIQUE")
                         .bind("manager", USER_BSM_2).then())
                 .then(db.sql(sql).bind("id", GARE_3).bind("nom", "Gare Routière de Bonabéri")
                         .bind("ville", "Douala").bind("quartier", "Bonabéri")
                         .bind("desc", "Gare de Bonabéri, porte d'entrée Ouest de Douala.")
                         .bind("horaires", "Lun–Dim : 04h30–22h30")
-                        .bind("services", "Salle d'attente,Restauration,Toilettes,Parking,Guichet Mobile Money")
+                        .bind("services", "SALLE_ATTENTE,RESTAURATION,TOILETTES,PARKING,MOBILE_MONEY")
                         .bind("manager", USER_BSM_1).then())
                 .then(db.sql(sql).bind("id", GARE_4).bind("nom", "Gare Routière de Bessengué")
                         .bind("ville", "Douala").bind("quartier", "Bessengué")
                         .bind("desc", "Gare centrale de Douala, au cœur du quartier Akwa.")
                         .bind("horaires", "Lun–Dim : 04h00–23h59")
-                        .bind("services", "Climatisation,Wi-Fi,Consigne,Restauration,Infirmerie,Parking sécurisé 24h/24")
+                        .bind("services", "CLIMATISATION,WIFI,CONSIGNE,RESTAURATION,INFIRMERIE,PARKING,SECURITE")
                         .bind("manager", USER_BSM_2).then())
                 .then(db.sql(sql).bind("id", GARE_5).bind("nom", "Gare Routière de Bafoussam")
                         .bind("ville", "Bafoussam").bind("quartier", "Banengo")
                         .bind("desc", "Principale gare de la capitale régionale de l'Ouest.")
                         .bind("horaires", "Lun–Dim : 05h00–21h00")
-                        .bind("services", "Salle d'attente,Restauration traditionnelle,Toilettes,Parking,Boutiques souvenirs")
+                        .bind("services", "SALLE_ATTENTE,RESTAURATION,TOILETTES,PARKING,BOUTIQUES")
                         .bind("manager", USER_BSM_1).then())
                 .doOnSuccess(v -> log.info("  ✔ Gares insérées"));
     }
@@ -667,24 +657,24 @@ public class DataSeeder {
               (id, gare_routiere_id, agency_id, agency_name, statut, echeance, montant_affiliation)
             VALUES
               (:id, :gareId, :agenceId, :agenceName, :statut, :echeance, :montant)
-            ON CONFLICT (id) DO NOTHING
+            ON CONFLICT (id) DO UPDATE SET statut = EXCLUDED.statut
             """;
 
         return
             db.sql(sql).bind("id", AFF_1).bind("gareId", GARE_1).bind("agenceId", AGENCY_1)
-                .bind("agenceName", "General Express Yaoundé").bind("statut", "ACTIF")
+                .bind("agenceName", "General Express Yaoundé").bind("statut", "PAYE")
                 .bind("echeance", LocalDate.parse("2026-05-01")).bind("montant", 75000.0).then()
             .then(db.sql(sql).bind("id", AFF_2).bind("gareId", GARE_4).bind("agenceId", AGENCY_2)
-                .bind("agenceName", "Touristique Express VIP Douala").bind("statut", "ACTIF")
+                .bind("agenceName", "Touristique Express VIP Douala").bind("statut", "PAYE")
                 .bind("echeance", LocalDate.parse("2026-05-01")).bind("montant", 90000.0).then())
             .then(db.sql(sql).bind("id", AFF_3).bind("gareId", GARE_5).bind("agenceId", AGENCY_3)
-                .bind("agenceName", "BTU - Bafoussam Transit Unité").bind("statut", "ACTIF")
+                .bind("agenceName", "BTU - Bafoussam Transit Unité").bind("statut", "PAYE")
                 .bind("echeance", LocalDate.parse("2026-05-01")).bind("montant", 55000.0).then())
             .then(db.sql(sql).bind("id", AFF_4).bind("gareId", GARE_2).bind("agenceId", AGENCY_4)
-                .bind("agenceName", "Confort Lines - Axe Centre-Sud").bind("statut", "ACTIF")
+                .bind("agenceName", "Confort Lines - Axe Centre-Sud").bind("statut", "PAYE")
                 .bind("echeance", LocalDate.parse("2026-05-01")).bind("montant", 65000.0).then())
             .then(db.sql(sql).bind("id", AFF_5).bind("gareId", GARE_4).bind("agenceId", AGENCY_1)
-                .bind("agenceName", "General Express Yaoundé").bind("statut", "ACTIF")
+                .bind("agenceName", "General Express Yaoundé").bind("statut", "PAYE")
                 .bind("echeance", LocalDate.parse("2026-05-01")).bind("montant", 80000.0).then())
             .doOnSuccess(v -> log.info("  ✔ Affiliations insérées (5)"));
     }
