@@ -13,6 +13,7 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
 import org.springframework.security.web.server.authorization.ServerAccessDeniedHandler;
+import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
@@ -25,12 +26,12 @@ public class SecurityConfig {
 
         private final AuthenticationManager authenticationManager;
         private final SecurityContextRepository securityContextRepository;
+        private final CorsConfigurationSource corsConfigurationSource;
 
         @Bean
         public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
                 return http
-                        .cors(cors -> {
-                        })
+                        .cors(cors -> cors.configurationSource(corsConfigurationSource))
                         .exceptionHandling(exceptionHandlingSpec -> exceptionHandlingSpec
                                 .authenticationEntryPoint(jsonAuthenticationEntryPoint())
                                 .accessDeniedHandler(jsonAccessDeniedHandler()))
