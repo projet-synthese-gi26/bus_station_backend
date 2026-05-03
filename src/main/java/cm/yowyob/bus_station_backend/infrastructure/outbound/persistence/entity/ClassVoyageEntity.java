@@ -18,7 +18,7 @@ import java.util.UUID;
 public class ClassVoyageEntity implements Persistable<UUID> {
     @Id
     @Column("id")
-    private UUID idClassVoyage;
+    private UUID id;
 
     @Column("label")
     private String nom;
@@ -26,20 +26,23 @@ public class ClassVoyageEntity implements Persistable<UUID> {
     @Column("price")
     private double prix;
 
+    @Column("version")
+    private Integer version;
+
     @Column("is_active")
     private boolean isActive;
 
-    @Column("version")
-    private Integer version;
+    @Column("id_agence_voyage")
+    private UUID idAgenceVoyage;
 
     @Transient
     private boolean isNew = false;
 
     @Override
-    public UUID getId() { return idClassVoyage; }
+    public UUID getId() { return id; }
 
     @Override
-    public boolean isNew() { return isNew || idClassVoyage == null; }
+    public boolean isNew() { return isNew || id == null; }
 
     public void setAsNew() { this.isNew = true; }
 }

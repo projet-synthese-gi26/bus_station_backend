@@ -25,6 +25,9 @@ public interface ReservationUseCase {
     // Actions Transactionnelles
     Mono<Reservation> createReservation(ReservationDTO reservationDTO);
 
+    Mono<ReservationDetailDTO> confirmer(PayRequestDTO payRequestDTO);
+    Mono<cm.yowyob.bus_station_backend.application.dto.payment.ResultStatus> getPaymentStatus(String transactionCode);
+
     Mono<Reservation> confirmReservation(ReservationConfirmDTO confirmDTO);
 
     // Paiement

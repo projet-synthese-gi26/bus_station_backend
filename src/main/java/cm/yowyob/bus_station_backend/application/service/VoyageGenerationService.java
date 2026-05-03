@@ -178,9 +178,9 @@ public class VoyageGenerationService implements VoyageGenerationUseCase {
                         return creerVoyagePublie(creneau, agence, dateDepart, fenetreFin,
                                 vehFinal, chaFinal, classVoyageId, currentUserId);
                     } else {
+                        // On garde les ressources trouvées même si incomplet (ex: vehicule OK mais chauffeur KO)
                         return creerBrouillon(creneau, agence, dateDepart, fenetreFin,
-                                matchingComplet ? vehFinal : null,
-                                matchingComplet ? chaFinal : null,
+                                vehFinal, chaFinal,
                                 classVoyageId, conflits);
                     }
                 });

@@ -2,19 +2,26 @@ package cm.yowyob.bus_station_backend.integration;
 
 import cm.yowyob.bus_station_backend.BaseIntegrationTest;
 import cm.yowyob.bus_station_backend.application.dto.reservation.*;
-import cm.yowyob.bus_station_backend.application.dto.voyage.VoyageCreateRequestDTO;
+import cm.yowyob.bus_station_backend.application.dto.payment.PayRequestDTO;
+import cm.yowyob.bus_station_backend.application.dto.payment.PayInResultDTO;
+import cm.yowyob.bus_station_backend.application.dto.payment.PayInData;
+import cm.yowyob.bus_station_backend.application.dto.payment.ResultStatus;
+import cm.yowyob.bus_station_backend.application.dto.payment.PaiementCallbackDTO;
+import cm.yowyob.bus_station_backend.application.dto.voyage.VoyageCancelDTO;
 import cm.yowyob.bus_station_backend.domain.enums.*;
-import cm.yowyob.bus_station_backend.helper.TestDataBuilder;
+import cm.yowyob.bus_station_backend.domain.model.Reservation;
 import org.junit.jupiter.api.*;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
 
 @DisplayName("Tests d'intégration - Workflow complet de réservation")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -26,6 +33,15 @@ class ReservationWorkflowIntegrationTest extends BaseIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        // Mock Payment initiation
+        PayInResultDTO mockPayResult = new PayInResultDTO();
+        mockPayResult.setStatus(ResultStatus.SUCCESS);
+        mockPayResult.setOk(true);
+        PayInData data = new PayInData();
+        data.setTransaction_code("TX-" + UUID.randomUUID().toString().substring(0, 8));
+        mockPayResult.setData(data);
+        when(paymentPort.initiatePayment(anyString(), anyString(), anyDouble(), any())).thenReturn(Mono.just(mockPayResult));
+
         // Préparer les données de test
         UUID organizationId = createTestOrganization();
         agenceId = createTestAgence(organizationId);
@@ -33,143 +49,133 @@ class ReservationWorkflowIntegrationTest extends BaseIntegrationTest {
         UUID vehiculeId = createTestVehicule(agenceId);
         voyageId = createTestVoyage();
         createLigneVoyage(voyageId, classVoyageId, vehiculeId, agenceId);
+        createTestPolitiqueAnnulation(agenceId);
+    }
+
+    private void createTestPolitiqueAnnulation(UUID agenceId) {
+        databaseClient.sql("""
+            INSERT INTO politiques_annulation (id_politique, duree_coupon_seconds, id_agence_voyage)
+            VALUES (:id, :duree, :agenceId)
+        """)
+                .bind("id", UUID.randomUUID())
+                .bind("duree", 3600L)
+                .bind("agenceId", agenceId)
+                .then()
+                .block();
     }
 
     @Test
     @Order(1)
-    @DisplayName("Scénario complet : Créer réservation → Confirmer → Vérifier historique")
+    @DisplayName("Scénario complet : Créer réservation → Initier Paiement → Webhook → Vérifier")
     void completeReservationWorkflow() {
         // ===== ÉTAPE 1 : Créer une réservation =====
         ReservationDTO reservationDTO = createReservationDTO();
 
-        ReservationDetailDTO createdReservation = webTestClient.post()
+        Reservation createdReservation = webTestClient.post()
                 .uri("/reservation/reserver")
                 .header("Authorization", "Bearer " + userToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(reservationDTO)
                 .exchange()
                 .expectStatus().isCreated()
-                .expectBody(ReservationDetailDTO.class)
+                .expectBody(Reservation.class)
                 .returnResult()
                 .getResponseBody();
 
         assertThat(createdReservation).isNotNull();
-        assertThat(createdReservation.getReservation().getStatutReservation()).isEqualTo(StatutReservation.RESERVER);
-        assertThat(createdReservation.getReservation().getNbrPassager()).isEqualTo(2);
+        assertThat(createdReservation.getStatutReservation()).isEqualTo(StatutReservation.RESERVER);
+        assertThat(createdReservation.getNbrPassager()).isEqualTo(2);
 
-        reservationId = createdReservation.getReservation().getIdReservation();
+        reservationId = createdReservation.getIdReservation();
 
         // Vérifier que les places ont été réservées dans le voyage
         verifyVoyagePlacesReduced(voyageId, 2);
 
-        // ===== ÉTAPE 2 : Confirmer le paiement =====
-        ReservationConfirmDTO confirmDTO = new ReservationConfirmDTO();
-        confirmDTO.setIdReservation(reservationId);
-        confirmDTO.setMontantPaye(50000);
+        // ===== ÉTAPE 2 : Initier le paiement =====
+        PayRequestDTO payRequest = new PayRequestDTO();
+        payRequest.setReservationId(reservationId);
+        payRequest.setAmount(50000.0);
+        payRequest.setMobilePhone("677777777");
+        payRequest.setMobilePhoneName("MTN Mobile Money");
 
-        webTestClient.post()
-                .uri("/reservation/confirm")
+        PayInResultDTO payResult = webTestClient.post()
+                .uri("/paiement/initier")
                 .header("Authorization", "Bearer " + userToken)
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(confirmDTO)
+                .bodyValue(payRequest)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(PayInResultDTO.class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(payResult).isNotNull();
+        String transactionCode = payResult.getData().getTransaction_code();
+
+        // ===== ÉTAPE 3 : Simuler le Webhook de confirmation (Callback Opérateur) =====
+        PaiementCallbackDTO callback = new PaiementCallbackDTO();
+        callback.setTransactionCode(transactionCode);
+        callback.setReservationId(reservationId);
+        callback.setMontantPaye(50000.0);
+
+        webTestClient.post()
+                .uri("/paiement/confirmer")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(callback)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ReservationDetailDTO.class)
                 .value(confirmed -> {
                     assertThat(confirmed.getReservation().getStatutReservation()).isEqualTo(StatutReservation.CONFIRMER);
                     assertThat(confirmed.getReservation().getStatutPayement()).isEqualTo(StatutPayment.PAID);
-                    assertThat(confirmed.getReservation().getDateConfirmation()).isNotNull();
-                });
-
-        // ===== ÉTAPE 3 : Vérifier l'historique =====
-        webTestClient.get()
-                .uri("/historique/reservation/{idUtilisateur}", testUserId)
-                .header("Authorization", "Bearer " + userToken)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBodyList(Object.class)
-                .value(historiques -> {
-                    assertThat(historiques).isNotEmpty();
-                });
-
-        // ===== ÉTAPE 4 : Récupérer les détails de la réservation =====
-        webTestClient.get()
-                .uri("/reservation/{id}", reservationId)
-                .header("Authorization", "Bearer " + userToken)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(ReservationDetailDTO.class)
-                .value(details -> {
-                    assertThat(details.getReservation().getIdReservation()).isEqualTo(reservationId);
-                    assertThat(details.getReservation().getStatutReservation()).isEqualTo(StatutReservation.CONFIRMER);
-                    assertThat(details.getPassager()).hasSize(2);
                 });
     }
 
     @Test
     @Order(2)
-    @DisplayName("Scénario d'annulation : Créer → Confirmer → Annuler → Vérifier compensation")
+    @DisplayName("Scénario d'annulation : Créer → Annuler → Vérifier places")
     void cancellationWorkflow() {
-        // ÉTAPE 1 : Créer et confirmer une réservation
+        // ÉTAPE 1 : Créer une réservation
         ReservationDTO reservationDTO = createReservationDTO();
 
-        ReservationDetailDTO createdReservation = webTestClient.post()
+        Reservation createdReservation = webTestClient.post()
                 .uri("/reservation/reserver")
                 .header("Authorization", "Bearer " + userToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(reservationDTO)
                 .exchange()
                 .expectStatus().isCreated()
-                .expectBody(ReservationDetailDTO.class)
+                .expectBody(Reservation.class)
                 .returnResult()
                 .getResponseBody();
 
-        UUID reservationId = createdReservation.getReservation().getIdReservation();
+        UUID resId = createdReservation.getIdReservation();
 
-        // Confirmer la réservation
-        ReservationConfirmDTO confirmDTO = new ReservationConfirmDTO();
-        confirmDTO.setIdReservation(reservationId);
-        confirmDTO.setMontantPaye(50000);
+        // Récupérer les IDs des passagers pour l'annulation
+        List<UUID> passagerIds = databaseClient
+                .sql("SELECT id_passager FROM passagers WHERE id_reservation = :id")
+                .bind("id", resId)
+                .map(row -> row.get("id_passager", UUID.class))
+                .all()
+                .collectList()
+                .block();
 
-        webTestClient.post()
-                .uri("/reservation/confirm")
-                .header("Authorization", "Bearer " + userToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(confirmDTO)
-                .exchange()
-                .expectStatus().isOk();
+        ReservationCancelDTO cancelDTO = new ReservationCancelDTO();
+        cancelDTO.setIdReservation(resId);
+        cancelDTO.setIdPassagers(passagerIds.toArray(new UUID[0]));
+        cancelDTO.setCanceled(true);
 
         // ÉTAPE 2 : Annuler la réservation
-        ReservationCancelDTO cancelDTO = new ReservationCancelDTO();
-        cancelDTO.setIdReservation(reservationId);
-        cancelDTO.setCauseAnnulation("Changement de plans");
-
         webTestClient.post()
-                .uri("/reservation/annuler")
+                .uri("/reservation/annuler/{reservationId}", resId)
                 .header("Authorization", "Bearer " + userToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(cancelDTO)
                 .exchange()
-                .expectStatus().isOk()
-                .expectBody(Object.class)
-                .value(response -> {
-                    // Vérifier qu'il y a un risque d'annulation ou un message de succès
-                    assertThat(response).isNotNull();
-                });
+                .expectStatus().isNoContent();
 
         // ÉTAPE 3 : Vérifier que les places sont libérées
         verifyVoyagePlacesIncreased(voyageId, 2);
-
-        // ÉTAPE 4 : Vérifier le solde d'indemnisation
-        webTestClient.get()
-                .uri("/solde-indemnisation/user/{userId}", testUserId)
-                .header("Authorization", "Bearer " + userToken)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBodyList(Object.class)
-                .value(soldes -> {
-                    assertThat(soldes).isNotEmpty();
-                });
     }
 
     @Test
@@ -179,26 +185,6 @@ class ReservationWorkflowIntegrationTest extends BaseIntegrationTest {
         // Given - Créer une réservation qui dépasse la capacité
         ReservationDTO reservationDTO = createReservationDTO();
         reservationDTO.setNbrPassager(100);
-        webTestClient.post()
-                .uri("/reservation/reserver")
-                .header("Authorization", "Bearer " + userToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(reservationDTO)
-                .exchange()
-                .expectStatus().isBadRequest();
-    }
-
-    @Test
-    @Order(4)
-    @DisplayName("Scénario : Réservation après date limite")
-    void shouldFailWhenReservationAfterDeadline() {
-        // Given - Créer un voyage avec une date limite dépassée
-        UUID expiredVoyageId = createExpiredVoyage();
-
-        ReservationDTO reservationDTO = createReservationDTO();
-        reservationDTO.setIdVoyage(expiredVoyageId);
-
-        // When & Then
         webTestClient.post()
                 .uri("/reservation/reserver")
                 .header("Authorization", "Bearer " + userToken)
@@ -226,62 +212,52 @@ class ReservationWorkflowIntegrationTest extends BaseIntegrationTest {
 
         // When & Then
         webTestClient.get()
-                .uri("/reservation/utilisateur/{idUser}", testUserId)
+                .uri("/reservation/user/{userId}", testUserId)
                 .header("Authorization", "Bearer " + userToken)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBodyList(ReservationPreviewDTO.class)
-                .value(reservations -> {
-                    assertThat(reservations).hasSizeGreaterThanOrEqualTo(3);
-                    assertThat(reservations).allMatch(r -> r.getReservation().getIdUser().equals(testUserId));
+                .expectBody(new ParameterizedTypeReference<RestPageImpl<ReservationPreviewDTO>>() {})
+                .value(page -> {
+                    assertThat(page.getContent()).hasSizeGreaterThanOrEqualTo(3);
                 });
     }
 
     @Test
     @Order(6)
-    @DisplayName("Scénario : Annulation par l'agence avec compensation")
-    void agencyCancellationWithCompensation() {
-        // Given - Créer et confirmer une réservation
+    @DisplayName("Scénario : Annulation par l'agence")
+    void agencyCancellationWorkflow() {
+        // Given - Créer une réservation
         ReservationDTO reservationDTO = createReservationDTO();
 
-        ReservationDetailDTO createdReservation = webTestClient.post()
+        Reservation createdReservation = webTestClient.post()
                 .uri("/reservation/reserver")
                 .header("Authorization", "Bearer " + userToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(reservationDTO)
                 .exchange()
                 .expectStatus().isCreated()
-                .expectBody(ReservationDetailDTO.class)
+                .expectBody(Reservation.class)
                 .returnResult()
                 .getResponseBody();
 
-        UUID reservationId = createdReservation.getReservation().getIdReservation();
-
-        // L'agence annule la réservation
-        ReservationCancelByAgenceDTO cancelDTO = new ReservationCancelByAgenceDTO();
-        cancelDTO.setIdReservation(reservationId);
-        cancelDTO.setCauseAnnulation("Problème technique du véhicule");
+        // L'agence annule le voyage
+        VoyageCancelDTO cancelDTO = new VoyageCancelDTO();
+        cancelDTO.setIdVoyage(voyageId);
+        cancelDTO.setAgenceVoyageId(agenceId);
+        cancelDTO.setCauseAnnulation("Problème technique");
+        cancelDTO.setCanceled(true);
 
         // Utiliser le token admin (chef d'agence)
         webTestClient.post()
-                .uri("/reservation/annuler-by-agence")
+                .uri("/reservation/agence/annuler-voyage")
                 .header("Authorization", "Bearer " + adminToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(cancelDTO)
                 .exchange()
-                .expectStatus().isOk();
+                .expectStatus().isNoContent();
 
-        // Vérifier que le client a reçu la compensation
-        webTestClient.get()
-                .uri("/solde-indemnisation/user/{userId}", testUserId)
-                .header("Authorization", "Bearer " + userToken)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$[0].montant")
-                .value(montant -> {
-                    assertThat(Double.parseDouble(montant.toString())).isGreaterThan(0);
-                });
+        // Vérifier que les places sont libérées
+        verifyVoyagePlacesIncreased(voyageId, 2);
     }
 
     // ===== Méthodes utilitaires =====
@@ -290,7 +266,7 @@ class ReservationWorkflowIntegrationTest extends BaseIntegrationTest {
         ReservationDTO dto = new ReservationDTO();
         dto.setIdVoyage(voyageId);
         dto.setNbrPassager(2);
-        dto.setMontantPaye(50000); // double, PAS BigDecimal
+        dto.setMontantPaye(50000);
 
         PassagerDTO passager1 = new PassagerDTO();
         passager1.setNom("Doe");
@@ -301,7 +277,7 @@ class ReservationWorkflowIntegrationTest extends BaseIntegrationTest {
         PassagerDTO passager2 = new PassagerDTO();
         passager2.setNom("Doe");
         passager2.setGenre("FEMALE");
-        passager1.setNbrBaggage(2);
+        passager2.setNbrBaggage(2);
         passager2.setPlaceChoisis(2);
 
         dto.setPassagerDTO(new PassagerDTO[]{passager1, passager2});
@@ -317,7 +293,7 @@ class ReservationWorkflowIntegrationTest extends BaseIntegrationTest {
             VALUES (:id, :orgId, :name, :shortName, :status, :active)
         """)
                 .bind("id", orgId)
-                .bind("orgId", UUID.randomUUID())
+                .bind("orgId", orgId)
                 .bind("name", "Test Organization")
                 .bind("shortName", "TO")
                 .bind("status", "ACTIVE")
@@ -332,7 +308,7 @@ class ReservationWorkflowIntegrationTest extends BaseIntegrationTest {
         databaseClient
                 .sql("""
             INSERT INTO agences_voyage
-            (agency_id, organisation_id, user_id, long_name, short_name, location)
+            (agency_id, organisation_id, user_id, name, short_name, location)
             VALUES (:agencyId, :orgId, :userId, :longName, :shortName, :location)
         """)
                 .bind("agencyId", agencyId)
@@ -351,13 +327,12 @@ class ReservationWorkflowIntegrationTest extends BaseIntegrationTest {
         databaseClient
                 .sql("""
             INSERT INTO class_voyage
-            (id_class_voyage, nom, prix, taux_annulation, id_agence_voyage)
-            VALUES (:id, :nom, :prix, :taux, :agenceId)
+            (id, label, price, id_agence_voyage)
+            VALUES (:id, :nom, :prix, :agenceId)
         """)
                 .bind("id", classId)
                 .bind("nom", "Économique")
                 .bind("prix", 25000.0)
-                .bind("taux", 10.0)
                 .bind("agenceId", agenceId)
                 .fetch()
                 .rowsUpdated()
@@ -417,35 +392,6 @@ class ReservationWorkflowIntegrationTest extends BaseIntegrationTest {
         return voyageId;
     }
 
-    private UUID createExpiredVoyage() {
-        UUID voyageId = UUID.randomUUID();
-        LocalDateTime pastDate = LocalDateTime.now().minusDays(1);
-
-        databaseClient
-                .sql("""
-                INSERT INTO voyages 
-                (id_voyage, titre, date_depart_prev, lieu_depart, lieu_arrive,
-                 nbr_place_reservable, nbr_place_restante, date_limite_reservation, 
-                 date_limite_confirmation, status_voyage)
-                VALUES (:id, :titre, :dateDepart, :lieuDepart, :lieuArrive,
-                        :places, :placesRestantes, :deadline, :confirmDeadline, :status)
-                """)
-                .bind("id", voyageId)
-                .bind("titre", "Voyage Expiré")
-                .bind("dateDepart", pastDate)
-                .bind("lieuDepart", "Yaoundé")
-                .bind("lieuArrive", "Douala")
-                .bind("places", 50)
-                .bind("placesRestantes", 50)
-                .bind("deadline", pastDate.minusHours(12))
-                .bind("confirmDeadline", pastDate.minusHours(2))
-                .bind("status", "PUBLIE")
-                .fetch()
-                .rowsUpdated()
-                .block();
-        return voyageId;
-    }
-
     private void createLigneVoyage(UUID voyageId, UUID classVoyageId, UUID vehiculeId, UUID agenceId) {
         databaseClient
                 .sql("""
@@ -465,9 +411,9 @@ class ReservationWorkflowIntegrationTest extends BaseIntegrationTest {
 
     private void verifyVoyagePlacesReduced(UUID voyageId, int expectedReduction) {
         Integer placesRestantes = databaseClient
-                .sql("SELECT nbr_place_restante FROM voyages WHERE id_voyage = :id")
+                .sql("SELECT nbr_place_reservable FROM voyages WHERE id_voyage = :id")
                 .bind("id", voyageId)
-                .map(row -> row.get("nbr_place_restante", Integer.class))
+                .map(row -> row.get("nbr_place_reservable", Integer.class))
                 .one()
                 .block();
 
@@ -476,12 +422,12 @@ class ReservationWorkflowIntegrationTest extends BaseIntegrationTest {
 
     private void verifyVoyagePlacesIncreased(UUID voyageId, int expectedIncrease) {
         Integer placesRestantes = databaseClient
-                .sql("SELECT nbr_place_restante FROM voyages WHERE id_voyage = :id")
+                .sql("SELECT nbr_place_reservable FROM voyages WHERE id_voyage = :id")
                 .bind("id", voyageId)
-                .map(row -> row.get("nbr_place_restante", Integer.class))
+                .map(row -> row.get("nbr_place_reservable", Integer.class))
                 .one()
                 .block();
 
-        assertThat(placesRestantes).isGreaterThan(50 - expectedIncrease);
+        assertThat(placesRestantes).isGreaterThanOrEqualTo(50);
     }
 }

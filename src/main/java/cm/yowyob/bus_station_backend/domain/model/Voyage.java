@@ -88,6 +88,7 @@ public class Voyage {
         } else {
             this.nbrPlaceReserve = Math.max(0, this.nbrPlaceReserve - nombre);
         }
+        this.nbrPlaceReservable += nombre;
         this.nbrPlaceRestante += nombre;
     }
 

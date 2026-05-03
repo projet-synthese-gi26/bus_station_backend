@@ -19,7 +19,7 @@ public interface ReservationR2dbcRepository extends R2dbcRepository<ReservationE
     @Query("""
                 SELECT *
                 FROM reservations
-                ORDER BY created_at DESC
+                ORDER BY date_reservation DESC
                 LIMIT :#{#pageable.pageSize}
                 OFFSET :#{#pageable.offset}
             """)
@@ -28,8 +28,8 @@ public interface ReservationR2dbcRepository extends R2dbcRepository<ReservationE
     @Query("""
                 SELECT *
                 FROM reservations
-                WHERE user_id = :userId
-                ORDER BY created_at DESC
+                WHERE id_user = :userId
+                ORDER BY date_reservation DESC
                 LIMIT :#{#pageable.pageSize}
                 OFFSET :#{#pageable.offset}
             """)
@@ -54,22 +54,7 @@ public interface ReservationR2dbcRepository extends R2dbcRepository<ReservationE
     Flux<ReservationEntity> findByAgenceIdPaged(UUID agenceId, Pageable pageable);
 
     // ---------- CONCURRENCY ----------
-    /*
-     * @Query("""
-     * UPDATE voyages
-     * SET nbr_place_reservable = nbr_place_reservable - :count
-     * WHERE id_voyage = :voyageId
-     * AND nbr_place_reservable >= :count
-     * """)
-     * Mono<Integer> decrementPlaces(UUID voyageId, int count);
-     * 
-     * @Query("""
-     * UPDATE voyages
-     * SET nbr_place_reservable = nbr_place_reservable + :count
-     * WHERE id_voyage = :voyageId
-     * """)
-     * Mono<Integer> incrementPlaces(UUID voyageId, int count);
-     */
+
     @Modifying
     @Query("UPDATE voyages SET nbr_place_reservable = nbr_place_reservable - :count WHERE id_voyage = :voyageId AND nbr_place_reservable >= :count")
     Mono<Integer> decrementPlaces(@Param("voyageId") UUID voyageId, @Param("count") int count);
@@ -83,15 +68,15 @@ public interface ReservationR2dbcRepository extends R2dbcRepository<ReservationE
     @Query("""
                 SELECT *
                 FROM reservations
-                WHERE statut = 'PENDING'
-                AND expiration_date < :now
+                WHERE statut_reservation = 'PENDING'
+                AND date_reservation < :now
             """)
     Flux<ReservationEntity> findPendingReservations(LocalDateTime now);
 
     // ---------- PLACES ----------
 
     @Query("""
-                SELECT numero_place
+                SELECT place_choisis
                 FROM passagers
                 WHERE id_voyage = :voyageId
                 AND statut = 'CONFIRMED'
@@ -99,7 +84,7 @@ public interface ReservationR2dbcRepository extends R2dbcRepository<ReservationE
     Flux<Integer> findConfirmedPassagersPlaces(UUID voyageId);
 
     @Query("""
-                SELECT numero_place
+                SELECT place_choisis
                 FROM passagers
                 WHERE id_voyage = :voyageId
                 AND statut = 'RESERVED'
@@ -107,6 +92,9 @@ public interface ReservationR2dbcRepository extends R2dbcRepository<ReservationE
     Flux<Integer> findReservedPassagersPlaces(UUID voyageId);
 
     // ---------- STATS ----------
+
+    @Query("SELECT COUNT(*) FROM reservations WHERE id_user = :userId")
+    Mono<Long> countByUserId(UUID userId);
 
     @Query("""
                 SELECT COUNT(*)

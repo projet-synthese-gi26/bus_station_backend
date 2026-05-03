@@ -1,6 +1,8 @@
 -- src/test/resources/schema.sql
 
 -- Initial cleanup to ensure a clean state
+DROP TABLE IF EXISTS alertes_agence CASCADE;
+DROP TABLE IF EXISTS voyages_brouillon CASCADE;
 DROP TABLE IF EXISTS affiliation_agence_voyage CASCADE;
 DROP TABLE IF EXISTS politique_et_taxes CASCADE;
 DROP TABLE IF EXISTS plannings_voyage CASCADE;
@@ -98,7 +100,10 @@ CREATE TABLE agences_voyage (
     -- Columns from 005 and extras
     logo_url VARCHAR(500),
     rating DOUBLE PRECISION DEFAULT 0.0,
-    specialties TEXT
+    specialties TEXT,
+    moyens_paiement TEXT,
+    vehicule_id_defaut UUID,
+    chauffeur_id_defaut UUID
 );
 
 CREATE TABLE gare_routiere (
@@ -388,3 +393,53 @@ CREATE TABLE creneaux_planning (
     CONSTRAINT fk_creneau_class_voyage FOREIGN KEY (id_class_voyage) REFERENCES class_voyage(id),
     CONSTRAINT fk_creneau_vehicule FOREIGN KEY (id_vehicule) REFERENCES vehicules(id_vehicule)
 );
+
+-- Table from 008-create-voyage-brouillon-table.sql
+CREATE TABLE voyages_brouillon (
+    id UUID PRIMARY KEY,
+    agence_voyage_id UUID NOT NULL,
+    ligne_service_id UUID,
+    titre VARCHAR(255) NOT NULL,
+    description TEXT,
+    lieu_depart VARCHAR(255) NOT NULL,
+    lieu_arrive VARCHAR(255) NOT NULL,
+    point_de_depart VARCHAR(255),
+    point_arrivee VARCHAR(255),
+    date_depart_prev TIMESTAMP WITH TIME ZONE,
+    heure_depart_effectif TIMESTAMP WITH TIME ZONE,
+    heure_arrive TIMESTAMP WITH TIME ZONE,
+    duree_estimee VARCHAR(50),
+    class_voyage_id UUID,
+    vehicule_id UUID,
+    chauffeur_id UUID,
+    nbr_place_reservable INT,
+    prix DOUBLE PRECISION,
+    amenities TEXT,
+    small_image VARCHAR(512),
+    big_image VARCHAR(512),
+    date_limite_reservation TIMESTAMP WITH TIME ZONE,
+    date_limite_confirmation TIMESTAMP WITH TIME ZONE,
+    statut_brouillon VARCHAR(20) NOT NULL DEFAULT 'INCOMPLET',
+    notes TEXT,
+    voyage_id UUID,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_brouillon_agence FOREIGN KEY (agence_voyage_id) REFERENCES agences_voyage(agency_id) ON DELETE CASCADE
+);
+
+-- Table from 009-create-alertes-agence-table.sql
+CREATE TABLE alertes_agence (
+    id_alerte UUID PRIMARY KEY,
+    gare_id UUID NOT NULL,
+    agence_id UUID NOT NULL,
+    bsm_id UUID NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    message TEXT NOT NULL,
+    is_lu BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    lu_at TIMESTAMP,
+    FOREIGN KEY (gare_id) REFERENCES gare_routiere(id_gare_routiere),
+    FOREIGN KEY (agence_id) REFERENCES agences_voyage(agency_id),
+    FOREIGN KEY (bsm_id) REFERENCES users(user_id)
+);
+

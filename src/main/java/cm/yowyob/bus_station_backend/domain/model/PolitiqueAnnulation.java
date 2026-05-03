@@ -6,7 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Duration;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
@@ -16,39 +17,38 @@ import java.util.UUID;
 @AllArgsConstructor
 public class PolitiqueAnnulation {
     private UUID idPolitique;
-
     private List<TauxPeriode> listeTauxPeriode;
-
-    //@Convert(converter = DurationConverter.class)
     private Duration dureeCoupon;
-
     private UUID idAgenceVoyage;
 
-    public double calculerTauxRemboursement(ClassVoyage classVoyage, Date dateLimReservation, Date dateLimConfirmation, Date now) {
-        if (dateLimReservation == null || dateLimConfirmation == null) return 0.0;
+    public double calculerTauxRemboursement(ClassVoyage classVoyage, LocalDateTime dateLimReservation, LocalDateTime dateLimConfirmation, LocalDateTime now) {
+        if (dateLimReservation == null || dateLimConfirmation == null || now == null) return 0.0;
 
-        double dateLimReservattionDouble = dateLimReservation.getTime() / 1000.0;
-        double dateLimConfirmationDouble = dateLimConfirmation.getTime() / 1000.0;
-        double nowDouble = now.getTime() / 1000.0;
-        double tauxDateAnnulation = (nowDouble - dateLimReservattionDouble)
-                / (dateLimConfirmationDouble - dateLimReservattionDouble);
+        long dateLimReservattionLong = dateLimReservation.toEpochSecond(ZoneOffset.UTC);
+        long dateLimConfirmationLong = dateLimConfirmation.toEpochSecond(ZoneOffset.UTC);
+        long nowLong = now.toEpochSecond(ZoneOffset.UTC);
+
+        double range = (double) (dateLimConfirmationLong - dateLimReservattionLong);
+        double tauxDateAnnulation = range == 0 ? 1.0 : (double) (nowLong - dateLimReservattionLong) / range;
+        
         double tauxClassVoyage = 1.0;
         double tauxPolitique = 1.0;
 
-        for (TauxPeriode politique : this.getListeTauxPeriode()) {
-            double startDate = politique.getDateDebut().getTime() / 1000.0;
-            double endDate = politique.getDateFin().getTime() / 1000.0;
-            if (startDate < nowDouble && endDate > nowDouble) {
-                tauxPolitique = politique.getCompensation();
+        if (this.getListeTauxPeriode() != null) {
+            for (TauxPeriode tp : this.getListeTauxPeriode()) {
+                if (tp.getDateDebut() != null && tp.getDateFin() != null) {
+                    if (now.isAfter(tp.getDateDebut()) && now.isBefore(tp.getDateFin())) {
+                        tauxPolitique = tp.getValeur();
+                        break;
+                    }
+                }
             }
-            break;
         }
 
         if (classVoyage != null) {
             tauxClassVoyage = classVoyage.getTauxAnnulation();
         }
 
-        // le model mathematique utilisé pour l'heure est une moyenne empirique des taux
         return (tauxDateAnnulation + tauxClassVoyage + tauxPolitique) / 3.0;
     }
 }

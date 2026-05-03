@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Column;
@@ -45,6 +46,9 @@ public class GareRoutiereEntity implements Persistable<UUID> {
     @Column("manager_id")
     private UUID managerId;
 
+    @Transient
+    private boolean isNew = false;
+
     @Override
     public UUID getId() {
         return idGareRoutiere;
@@ -52,6 +56,10 @@ public class GareRoutiereEntity implements Persistable<UUID> {
 
     @Override
     public boolean isNew() {
-        return version == null;
+        return isNew || version == null;
+    }
+
+    public void setAsNew() {
+        this.isNew = true;
     }
 }

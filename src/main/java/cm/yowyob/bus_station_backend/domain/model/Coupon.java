@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -15,8 +15,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Coupon {
     private UUID idCoupon;
-    private Date dateDebut;
-    private Date dateFin;
+    private LocalDateTime dateDebut;
+    private LocalDateTime dateFin;
     private StatutCoupon statusCoupon;
     private double valeur;
     private UUID idHistorique;

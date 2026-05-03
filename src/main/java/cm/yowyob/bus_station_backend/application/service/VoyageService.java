@@ -16,11 +16,9 @@ import cm.yowyob.bus_station_backend.application.port.out.VoyagePersistencePort;
 import cm.yowyob.bus_station_backend.domain.enums.StatutVoyage;
 import cm.yowyob.bus_station_backend.domain.exception.ResourceNotFoundException;
 import cm.yowyob.bus_station_backend.domain.factory.NotificationFactory;
-import cm.yowyob.bus_station_backend.domain.model.AgenceVoyage;
 import cm.yowyob.bus_station_backend.domain.model.ClassVoyage;
 import cm.yowyob.bus_station_backend.domain.model.LigneVoyage;
 import cm.yowyob.bus_station_backend.domain.model.Voyage;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -68,7 +66,7 @@ public class VoyageService implements VoyageUseCase {
 
     @Override
     public Mono<VoyageDetailsDTO> createVoyage(VoyageCreateRequestDTO dto, UUID currentUserId) {
-        Date now = new Date();
+        LocalDateTime now = LocalDateTime.now();
         log.info("Création d'un voyage par l'utilisateur: {}", currentUserId);
 
         return Mono.zip(
@@ -221,6 +219,7 @@ public class VoyageService implements VoyageUseCase {
                 .idClassVoyage(UUID.randomUUID())
                 .nom(dto.getNom())
                 .prix(dto.getPrix())
+                .idAgenceVoyage(dto.getIdAgenceVoyage())
                 .build();
         return voyagePersistencePort.saveClassVoyage(cv)
                 .map(voyageMapper::mapToClassVoyageDTO);
@@ -321,7 +320,6 @@ public class VoyageService implements VoyageUseCase {
                 .flatMap(classVoyage -> {
                     classVoyage.setNom(dto.getNom());
                     classVoyage.setPrix(dto.getPrix());
-                    classVoyage.setTauxAnnulation(dto.getTauxAnnulation());
                     classVoyage.setIdAgenceVoyage(dto.getIdAgenceVoyage());
                     return voyagePersistencePort.saveClassVoyage(classVoyage);
                 })

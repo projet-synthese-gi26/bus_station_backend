@@ -10,7 +10,7 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Table("coupons")
@@ -21,8 +21,8 @@ import java.util.UUID;
 public class CouponEntity implements Persistable<UUID> {
     @Id
     private UUID idCoupon;
-    private Date dateDebut;
-    private Date dateFin;
+    private LocalDateTime dateDebut;
+    private LocalDateTime dateFin;
     private StatutCoupon statusCoupon;
     private double valeur;
     private UUID idHistorique;

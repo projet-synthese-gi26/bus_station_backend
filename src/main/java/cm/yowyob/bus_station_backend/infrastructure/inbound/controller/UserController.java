@@ -145,8 +145,8 @@ public class UserController {
                         @ApiResponse(responseCode = "200", description = "Chauffeurs found successfully", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = UserResponseDTO.class)))),
                         @ApiResponse(responseCode = "404", description = "Agence not Found")
         })
-        public Mono<ResponseEntity<Flux<UserResponseDTO>>> getChauffeursByAgenceId(@PathVariable UUID agenceId) {
-                return Mono.just(ResponseEntity.ok(userUseCase.getChauffeursByAgenceId(agenceId)));
+        public Flux<UserResponseDTO> getChauffeursByAgenceId(@PathVariable UUID agenceId) {
+                return userUseCase.getChauffeursByAgenceId(agenceId);
         }
 
         @DeleteMapping("/chauffeur/{chauffeurId}")
@@ -192,8 +192,8 @@ public class UserController {
         @GetMapping("/employes/{agenceId}")
         @SecurityRequirement(name = "bearerAuth")
         @Operation(summary = "Get employes by agence ID")
-        public Mono<ResponseEntity<Flux<EmployeResponseDTO>>> getEmployesByAgenceId(@PathVariable UUID agenceId) {
-                return Mono.just(ResponseEntity.ok(userUseCase.getEmployesByAgenceId(agenceId)));
+        public Flux<EmployeResponseDTO> getEmployesByAgenceId(@PathVariable UUID agenceId) {
+                return userUseCase.getEmployesByAgenceId(agenceId);
         }
 
         @DeleteMapping("/employe/{employeId}")

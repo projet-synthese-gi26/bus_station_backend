@@ -10,7 +10,7 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Table("historiques")
@@ -22,9 +22,9 @@ public class HistoriqueEntity implements Persistable<UUID> {
     @Id
     private UUID idHistorique;
     private StatutHistorique statusHistorique;
-    private Date dateReservation;
-    private Date dateConfirmation;
-    private Date dateAnnulation;
+    private LocalDateTime dateReservation;
+    private LocalDateTime dateConfirmation;
+    private LocalDateTime dateAnnulation;
     private String causeAnnulation;
     private String origineAnnulation;
     private double tauxAnnulation;

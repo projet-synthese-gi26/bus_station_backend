@@ -22,7 +22,7 @@ public class OpenAPIConfig {
                                                                 .email("tchassidaniel@gmail.com, jonathabachelard@gmail.com"))
                                                 .description("API Architecture Hexagonale & WebFlux"))
                                 .addServersItem(new Server()
-                                                .url("http://46.224.128.125:9006")
+                                                .url("https://traefikdev.yowyob.com/bus-station")
                                                 .description("Production"))
                                 .addServersItem(new Server()
                                                 .url("http://localhost:8080")

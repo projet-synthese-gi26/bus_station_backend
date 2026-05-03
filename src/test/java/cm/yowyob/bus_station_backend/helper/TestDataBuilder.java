@@ -21,13 +21,14 @@ public class TestDataBuilder {
         return user;
     }
 
-    public static AgenceVoyageDTO createTestAgence(UUID organizationId, UUID userId) {
+    public static AgenceVoyageDTO createTestAgence(UUID organizationId, UUID userId, UUID gareRoutiereId) {
         AgenceVoyageDTO agence = new AgenceVoyageDTO();
         agence.setOrganisation_id(organizationId);
         agence.setUser_id(userId);
         agence.setLong_name("Agence Test Transport");
         agence.setShort_name("ATT-" + UUID.randomUUID().toString().substring(0, 5));
         agence.setLocation("Yaoundé");
+        agence.setGare_routiere_id(gareRoutiereId);
         agence.setSocial_network("@agence_test");
         agence.setDescription("Une agence de test pour les voyages");
         agence.setGreeting_message("Bienvenue chez nous!");

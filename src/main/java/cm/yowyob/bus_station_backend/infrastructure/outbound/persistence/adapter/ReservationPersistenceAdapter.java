@@ -39,14 +39,21 @@ public class ReservationPersistenceAdapter implements ReservationPersistencePort
 
     @Override
     public Mono<Reservation> save(Reservation reservation) {
-    ReservationEntity entity = reservationMapper.toEntity(reservation);
-    if (entity.getIdReservation() == null) {
-        entity.setIdReservation(UUID.randomUUID());
-    }
-    entity.setAsNew(); // ← toujours INSERT pour un nouveau save()
-    return reservationRepository
-            .save(entity)
-            .map(reservationMapper::toDomain);
+        ReservationEntity entity = reservationMapper.toEntity(reservation);
+        if (entity.getIdReservation() == null) {
+            entity.setIdReservation(UUID.randomUUID());
+            entity.setAsNew();
+            return reservationRepository.save(entity).map(reservationMapper::toDomain);
+        }
+        
+        return reservationRepository.existsById(entity.getIdReservation())
+                .flatMap(exists -> {
+                    if (!exists) {
+                        entity.setAsNew();
+                    }
+                    return reservationRepository.save(entity);
+                })
+                .map(reservationMapper::toDomain);
     }
 
     @Override
@@ -188,6 +195,11 @@ public class ReservationPersistenceAdapter implements ReservationPersistencePort
     @Override
     public Mono<Long> countReservationsByAgenceId(UUID agenceId) {
         return reservationRepository.countByAgenceId(agenceId);
+    }
+
+    @Override
+    public Mono<Long> countByUserId(UUID userId) {
+        return reservationRepository.countByUserId(userId);
     }
 
     @Override

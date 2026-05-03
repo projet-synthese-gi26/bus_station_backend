@@ -14,8 +14,7 @@ public class TauxPeriodePersistenceMapper {
                 .idTauxPeriode(entity.getIdTauxPeriode())
                 .dateDebut(entity.getDateDebut())
                 .dateFin(entity.getDateFin())
-                .taux(entity.getTaux())
-                .compensation(entity.getCompensation())
+                .valeur(entity.getValeur())
                 .idPolitiqueAnnulation(entity.getIdPolitiqueAnnulation())
                 .build();
     }
@@ -27,8 +26,7 @@ public class TauxPeriodePersistenceMapper {
                 .idTauxPeriode(domain.getIdTauxPeriode())
                 .dateDebut(domain.getDateDebut())
                 .dateFin(domain.getDateFin())
-                .taux(domain.getTaux())
-                .compensation(domain.getCompensation())
+                .valeur(domain.getValeur())
                 .idPolitiqueAnnulation(domain.getIdPolitiqueAnnulation())
                 .build();
     }

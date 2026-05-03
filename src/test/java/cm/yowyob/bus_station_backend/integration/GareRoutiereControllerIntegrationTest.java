@@ -2,6 +2,7 @@ package cm.yowyob.bus_station_backend.integration;
 
 import cm.yowyob.bus_station_backend.BaseIntegrationTest;
 import cm.yowyob.bus_station_backend.application.dto.gareRoutiere.GareRoutiereDTO;
+import cm.yowyob.bus_station_backend.application.dto.gareRoutiere.GareRoutierePreviewDTO;
 import cm.yowyob.bus_station_backend.application.dto.gareRoutiere.GareRoutiereRequestDTO;
 import cm.yowyob.bus_station_backend.domain.enums.ServicesGareRoutiere;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,7 +52,7 @@ public class GareRoutiereControllerIntegrationTest extends BaseIntegrationTest {
         requestDTO.setServices(List.of(ServicesGareRoutiere.WIFI, ServicesGareRoutiere.PARKING));
 
         authenticatedClient(adminToken).post()
-                .uri("/gares-routieres")
+                .uri("/gare")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(requestDTO)
                 .exchange()
@@ -59,15 +60,15 @@ public class GareRoutiereControllerIntegrationTest extends BaseIntegrationTest {
 
         // verify in database
         verifyGareRoutiereExistsInDatabase(requestDTO.getNomGareRoutiere());
-    }
+        }
 
-    @Test
+        @Test
     void shouldGetAllGaresRoutieres() {
         authenticatedClient(adminToken).get()
-                .uri("/gares-routieres")
+                .uri("/gare")
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<RestPageImpl<GareRoutiereDTO>>() {
+                .expectBody(new ParameterizedTypeReference<RestPageImpl<GareRoutierePreviewDTO>>() {
                 })
                 .value(page -> {
                     assertThat(page.getContent()).hasSize(2);
@@ -77,10 +78,10 @@ public class GareRoutiereControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void shouldGetGaresRoutieresBySearchTerm() {
         authenticatedClient(adminToken).get()
-                .uri("/gares-routieres?searchTerm=Yaounde")
+                .uri("/gare?searchTerm=Yaounde")
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<RestPageImpl<GareRoutiereDTO>>() {
+                .expectBody(new ParameterizedTypeReference<RestPageImpl<GareRoutierePreviewDTO>>() {
                 })
                 .value(page -> {
                     assertThat(page.getContent()).hasSize(1);
@@ -91,10 +92,10 @@ public class GareRoutiereControllerIntegrationTest extends BaseIntegrationTest {
     @Test
     void shouldGetGaresRoutieresByServices() {
         authenticatedClient(adminToken).get()
-                .uri("/gares-routieres?services=WIFI,PARKING")
+                .uri("/gare?services=WIFI,PARKING")
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(new ParameterizedTypeReference<RestPageImpl<GareRoutiereDTO>>() {
+                .expectBody(new ParameterizedTypeReference<RestPageImpl<GareRoutierePreviewDTO>>() {
                 })
                 .value(page -> {
                     assertThat(page.getContent()).hasSize(1);

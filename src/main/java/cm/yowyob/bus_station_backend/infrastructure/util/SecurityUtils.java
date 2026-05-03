@@ -22,7 +22,9 @@ public class SecurityUtils {
     // --- Helper pour récupérer l'ID de l'utilisateur connecté ---
     public static Mono<UUID> getCurrentUserId() {
         return ReactiveSecurityContextHolder.getContext()
-                .map(ctx -> ctx.getAuthentication().getPrincipal())
+                .map(SecurityContext::getAuthentication)
+                .filter(auth -> auth != null && auth.isAuthenticated())
+                .map(auth -> auth.getPrincipal())
                 .cast(User.class)
                 .map(User::getUserId)
                 .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED)));

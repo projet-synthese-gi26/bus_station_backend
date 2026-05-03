@@ -14,6 +14,5 @@ import java.util.UUID;
 public class ClassVoyageDTO {
     private String nom;
     private double prix;
-    private double tauxAnnulation;
     private UUID idAgenceVoyage;
 }

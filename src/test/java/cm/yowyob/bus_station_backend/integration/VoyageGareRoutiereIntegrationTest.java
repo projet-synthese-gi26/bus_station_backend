@@ -42,7 +42,7 @@ class VoyageGareRoutiereIntegrationTest extends BaseIntegrationTest {
 
         // When & Then
         webTestClient.get()
-                .uri("/voyage/gare-routiere/{gareId}", gareId)
+                .uri("/voyage/gare/{gareId}", gareId)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(new ParameterizedTypeReference<RestPageImpl<VoyagePreviewDTO>>() {})
@@ -61,7 +61,7 @@ class VoyageGareRoutiereIntegrationTest extends BaseIntegrationTest {
     @DisplayName("Devrait retourner 404 quand la gare n'existe pas")
     void shouldReturn404WhenGareNotFound() {
         webTestClient.get()
-                .uri("/voyage/gare-routiere/{gareId}", UUID.randomUUID())
+                .uri("/voyage/gare/{gareId}", UUID.randomUUID())
                 .exchange()
                 .expectStatus().isNotFound();
     }

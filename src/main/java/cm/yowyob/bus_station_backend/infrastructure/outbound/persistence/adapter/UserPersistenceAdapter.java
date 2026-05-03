@@ -38,8 +38,15 @@ public class UserPersistenceAdapter implements UserPersistencePort {
         if (user.getUserId() == null) {
             entity.setUserId(UUID.randomUUID());
             entity.setAsNew();
+            return userRepository.save(entity).map(userMapper::toDomain);
         }
-        return userRepository.save(entity)
+        return userRepository.existsById(user.getUserId())
+                .flatMap(exists -> {
+                    if (!exists) {
+                        entity.setAsNew();
+                    }
+                    return userRepository.save(entity);
+                })
                 .map(userMapper::toDomain);
     }
 
@@ -81,16 +88,21 @@ public class UserPersistenceAdapter implements UserPersistencePort {
         return userRepository.deleteById(id);
     }
 
-    // ---------- EMPLOYES ----------
-
     @Override
     public Mono<EmployeAgenceVoyage> saveEmploye(EmployeAgenceVoyage employe) {
         EmployeEntity entity = employeMapper.toEntity(employe);
         if (employe.getEmployeId() == null) {
             entity.setEmployeId(UUID.randomUUID());
             entity.setAsNew();
+            return employeRepository.save(entity).map(employeMapper::toDomain);
         }
-        return employeRepository.save(entity)
+        return employeRepository.existsById(employe.getEmployeId())
+                .flatMap(exists -> {
+                    if (!exists) {
+                        entity.setAsNew();
+                    }
+                    return employeRepository.save(entity);
+                })
                 .map(employeMapper::toDomain);
     }
 
@@ -111,16 +123,21 @@ public class UserPersistenceAdapter implements UserPersistencePort {
         return employeRepository.deleteById(id);
     }
 
-    // ---------- CHAUFFEURS ----------
-
     @Override
     public Mono<ChauffeurAgenceVoyage> saveChauffeur(ChauffeurAgenceVoyage chauffeur) {
         ChauffeurEntity entity = chauffeurMapper.toEntity(chauffeur);
         if (chauffeur.getChauffeurId() == null) {
             entity.setChauffeurId(UUID.randomUUID());
             entity.setAsNew();
+            return chauffeurRepository.save(entity).map(chauffeurMapper::toDomain);
         }
-        return chauffeurRepository.save(entity)
+        return chauffeurRepository.existsById(chauffeur.getChauffeurId())
+                .flatMap(exists -> {
+                    if (!exists) {
+                        entity.setAsNew();
+                    }
+                    return chauffeurRepository.save(entity);
+                })
                 .map(chauffeurMapper::toDomain);
     }
 

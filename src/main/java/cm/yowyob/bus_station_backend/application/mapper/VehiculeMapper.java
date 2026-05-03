@@ -29,6 +29,7 @@ public class VehiculeMapper {
         }
 
         return new VehiculeDTO(
+                domain.getIdVehicule(),
                 domain.getNom(),
                 domain.getModele(),
                 domain.getDescription(),

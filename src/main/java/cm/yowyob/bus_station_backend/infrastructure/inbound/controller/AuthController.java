@@ -28,7 +28,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
@@ -66,7 +65,7 @@ public class AuthController {
     @PostMapping(path = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Connexion : retourne accessToken + refreshToken")
     public Mono<ResponseEntity<AuthTokensDTO>> login(@RequestBody AuthentificationDTO authDTO) {
-        return authenticationManager.authenticate(
+         return authenticationManager.authenticate(
                         new UsernamePasswordAuthenticationToken(authDTO.username(), authDTO.password()))
                 .flatMap(auth -> jwtService.generateJwt(authDTO.username())
                         .flatMap(userResp -> {
