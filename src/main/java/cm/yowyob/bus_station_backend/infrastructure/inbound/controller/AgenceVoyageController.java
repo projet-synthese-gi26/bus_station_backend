@@ -123,7 +123,7 @@ public class AgenceVoyageController {
                         @ApiResponse(responseCode = "404", description = "Agence non trouvée")
         })
         @GetMapping("/chef-agence/{id}")
-        public Mono<ResponseEntity<AgenceVoyageDTO>> getChefAgenceById(@PathVariable UUID id) {
+        public Mono<ResponseEntity<AgenceVoyageResponseDTO>> getChefAgenceById(@PathVariable UUID id) {
                 return agenceUseCase.getAgenceByChefAgenceId(id)
                                 .map(agence -> new ResponseEntity<>(agence, HttpStatus.OK));
                 // .onErrorResume(ResourceNotFoundException.class, e -> Mono.just(new

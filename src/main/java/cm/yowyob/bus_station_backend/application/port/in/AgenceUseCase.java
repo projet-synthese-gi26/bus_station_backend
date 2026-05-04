@@ -18,7 +18,7 @@ public interface AgenceUseCase {
 
     Mono<Page<AgenceVoyageResponseDTO>> getAllAgences(Pageable pageable);
 
-    Mono<AgenceVoyageDTO> getAgenceByChefAgenceId(UUID chefId); // Changé pour retourner un DTO
+    Mono<AgenceVoyageResponseDTO> getAgenceByChefAgenceId(UUID chefId); // Changé pour retourner un DTO
     // Correspond à createAgenceVoyage
 
     Mono<AgenceVoyageDTO> updateAgence(UUID id, AgenceVoyageDTO agenceDTO, UUID currentUserId); // Changé pour prendre

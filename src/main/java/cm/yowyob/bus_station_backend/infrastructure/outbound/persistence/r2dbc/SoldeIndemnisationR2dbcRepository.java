@@ -16,7 +16,7 @@ public interface SoldeIndemnisationR2dbcRepository extends R2dbcRepository<Solde
     @Query("""
                 SELECT *
                 FROM soldes_indemnisation
-                WHERE user_id = :userId
+                WHERE id_user = :userId
                 AND id_agence_voyage = :agenceId
             """)
     Mono<SoldeIndemnisationEntity> findByUserIdAndAgenceId(
@@ -28,8 +28,7 @@ public interface SoldeIndemnisationR2dbcRepository extends R2dbcRepository<Solde
     @Query("""
                 SELECT *
                 FROM soldes_indemnisation
-                WHERE user_id = :userId
-                ORDER BY updated_at DESC
+                WHERE id_user = :userId
                 LIMIT :#{#pageable.pageSize}
                 OFFSET :#{#pageable.offset}
             """)

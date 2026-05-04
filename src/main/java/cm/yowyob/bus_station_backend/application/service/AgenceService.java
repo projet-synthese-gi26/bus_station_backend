@@ -54,10 +54,10 @@ public class AgenceService implements AgenceUseCase {
     }
 
     @Override
-    public Mono<AgenceVoyageDTO> getAgenceByChefAgenceId(UUID chefId) {
+    public Mono<AgenceVoyageResponseDTO> getAgenceByChefAgenceId(UUID chefId) {
         return agencePort.findByChefAgenceId(chefId)
                 .switchIfEmpty(Mono.error(new ResourceNotFoundException("Aucune agence pour ce chef")))
-                .map(agenceMapper::toDTO);
+                .map(agenceMapper::toResponseDTO);
     }
 
     @Override

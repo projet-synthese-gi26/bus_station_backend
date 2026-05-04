@@ -138,10 +138,10 @@ class AgenceVoyageControllerIntegrationTest extends BaseIntegrationTest {
                 .header("Authorization", "Bearer " + adminToken)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(AgenceVoyageDTO.class)
+                .expectBody(AgenceVoyageResponseDTO.class)
                 .value(response -> {
                     assertThat(response).isNotNull();
-                    assertThat(response.getUser_id()).isEqualTo(testAdminId);
+                    assertThat(response.getUserId()).isEqualTo(testAdminId);
                 });
     }
 
