@@ -1,6 +1,7 @@
 package cm.yowyob.bus_station_backend.application.mapper;
 
 import cm.yowyob.bus_station_backend.application.dto.classVoyage.ClassVoyageDTO;
+import cm.yowyob.bus_station_backend.application.dto.classVoyage.ClassVoyageResponseDTO;
 import cm.yowyob.bus_station_backend.application.dto.vehicule.VehiculeDTO;
 import cm.yowyob.bus_station_backend.application.dto.voyage.VoyageCreateRequestDTO;
 import cm.yowyob.bus_station_backend.application.dto.voyage.VoyageDTO;
@@ -242,5 +243,18 @@ public class VoyageMapper {
         classVoyageDTO.setPrix(classVoyage.getPrix());
         classVoyageDTO.setNom(classVoyage.getNom());
         return classVoyageDTO;
+    }
+
+    public ClassVoyageResponseDTO mapToClassVoyageResponseDTO(ClassVoyage classVoyage){
+        if (classVoyage == null){
+            return null;
+        }
+
+        ClassVoyageResponseDTO responseDTO = new ClassVoyageResponseDTO();
+        responseDTO.setId(classVoyage.getIdClassVoyage());
+        responseDTO.setPrix(classVoyage.getPrix());
+        responseDTO.setNom(classVoyage.getNom());
+        responseDTO.setIdAgenceVoyage(classVoyage.getIdAgenceVoyage());
+        return responseDTO;
     }
 }

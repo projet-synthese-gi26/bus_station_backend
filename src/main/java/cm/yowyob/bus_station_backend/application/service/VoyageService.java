@@ -1,6 +1,7 @@
 package cm.yowyob.bus_station_backend.application.service;
 
 import cm.yowyob.bus_station_backend.application.dto.classVoyage.ClassVoyageDTO;
+import cm.yowyob.bus_station_backend.application.dto.classVoyage.ClassVoyageResponseDTO;
 import cm.yowyob.bus_station_backend.application.dto.voyage.VoyageCreateRequestDTO;
 import cm.yowyob.bus_station_backend.application.dto.voyage.VoyageDTO;
 import cm.yowyob.bus_station_backend.application.dto.voyage.VoyageDetailsDTO;
@@ -233,8 +234,8 @@ public class VoyageService implements VoyageUseCase {
     }
 
     @Override
-    public Flux<ClassVoyageDTO> getClassVoyagesByAgence(UUID agenceId) {
-        return voyagePersistencePort.findClassVoyagesByAgence(agenceId).map(voyageMapper::mapToClassVoyageDTO);
+    public Flux<ClassVoyageResponseDTO> getClassVoyagesByAgence(UUID agenceId) {
+        return voyagePersistencePort.findClassVoyagesByAgence(agenceId).map(voyageMapper::mapToClassVoyageResponseDTO);
     }
 
     // --- Helpers Privés ---

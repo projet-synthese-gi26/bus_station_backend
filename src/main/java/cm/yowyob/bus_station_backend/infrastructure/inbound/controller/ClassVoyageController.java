@@ -1,6 +1,7 @@
 package cm.yowyob.bus_station_backend.infrastructure.inbound.controller;
 
 import cm.yowyob.bus_station_backend.application.dto.classVoyage.ClassVoyageDTO;
+import cm.yowyob.bus_station_backend.application.dto.classVoyage.ClassVoyageResponseDTO;
 import cm.yowyob.bus_station_backend.application.port.in.VoyageUseCase;
 import cm.yowyob.bus_station_backend.domain.exception.ResourceNotFoundException;
 import io.swagger.v3.oas.annotations.Operation;
@@ -51,7 +52,7 @@ public class ClassVoyageController {
     })
     @GetMapping("/agence/{idAgence}")
     @SecurityRequirement(name = "bearerAuth")
-    public Mono<ResponseEntity<List<ClassVoyageDTO>>> getAllClassVoyagesByAgence(@PathVariable UUID idAgence) {
+    public Mono<ResponseEntity<List<ClassVoyageResponseDTO>>> getAllClassVoyagesByAgence(@PathVariable UUID idAgence) {
         return voyageUseCase.getClassVoyagesByAgence(idAgence)
                 .collectList()
                 .map(ResponseEntity::ok);

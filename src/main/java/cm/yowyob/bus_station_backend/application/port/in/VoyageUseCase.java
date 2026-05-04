@@ -1,6 +1,7 @@
 package cm.yowyob.bus_station_backend.application.port.in;
 
 import cm.yowyob.bus_station_backend.application.dto.classVoyage.ClassVoyageDTO;
+import cm.yowyob.bus_station_backend.application.dto.classVoyage.ClassVoyageResponseDTO;
 import cm.yowyob.bus_station_backend.application.dto.voyage.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -47,7 +48,7 @@ public interface VoyageUseCase {
 
     Mono<Page<ClassVoyageDTO>> getAllClassVoyages(Pageable pageable);
 
-    Flux<ClassVoyageDTO> getClassVoyagesByAgence(UUID agenceId);
+    Flux<ClassVoyageResponseDTO> getClassVoyagesByAgence(UUID agenceId);
 
     Flux<VoyagePreviewDTO> getVoyagesSimilaires(UUID voyageId, int limit);
     Mono<Page<VoyagePreviewDTO>> getVoyagesPublicsByAgence(UUID agenceId, Pageable pageable);
