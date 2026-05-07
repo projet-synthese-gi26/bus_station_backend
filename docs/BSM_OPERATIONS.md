@@ -30,7 +30,14 @@ Création d'une nouvelle taxe d'affiliation pour les agences.
     | `montantFixe` | Double | Montant de la taxe |
 
 ### `PUT /taxe-affiliation/{id}/statut`
-Mise à jour du statut de paiement d'une taxe.
+Mise à jour du statut de paiement d'une taxe d'affiliation (contrat).
+
+*   **Payload (AffiliationStatutDTO)** :
+    | Champ | Type | Description |
+    | :--- | :--- | :--- |
+    | `statut` | Enum | Statut (PAYE, EN_ATTENTE, EN_RETARD) |
+
+*   **Réponse (AffiliationResponseDTO)** : Le contrat d'affiliation mis à jour.
 
 ---
 

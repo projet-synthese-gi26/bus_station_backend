@@ -2,11 +2,15 @@ package cm.yowyob.bus_station_backend.integration;
 
 import cm.yowyob.bus_station_backend.BaseIntegrationTest;
 import cm.yowyob.bus_station_backend.application.dto.agence.UpdateStatutAgenceDTO;
+import cm.yowyob.bus_station_backend.application.dto.affiliation.AffiliationStatutDTO;
 import cm.yowyob.bus_station_backend.application.dto.politiquegare.PolitiqueGareCreateDTO;
 import cm.yowyob.bus_station_backend.application.dto.taxe.TaxeAffiliationCreateDTO;
+import cm.yowyob.bus_station_backend.domain.enums.StatutTaxe;
 import org.junit.jupiter.api.*;
 import org.springframework.http.MediaType;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @DisplayName("Tests d'intégration - Workflow BSM")
@@ -83,6 +87,23 @@ class BsmWorkflowIntegrationTest extends BaseIntegrationTest {
                 .expectStatus().isOk();
     }
 
+    @Test
+    @Order(5)
+    @DisplayName("Mise à jour statut taxe d'affiliation")
+    void updateTaxeStatut() {
+        UUID affiliationId = createTestAffiliation(gareId, agenceId);
+        AffiliationStatutDTO dto = new AffiliationStatutDTO(StatutTaxe.PAYE);
+
+        authenticatedClient(bsmToken).put()
+                .uri("/taxe-affiliation/{id}/statut", affiliationId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(dto)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.statut").isEqualTo("PAYE");
+    }
+
     // Helpers
     private UUID createTestGare(UUID managerId) {
         UUID id = UUID.randomUUID();
@@ -98,6 +119,18 @@ class BsmWorkflowIntegrationTest extends BaseIntegrationTest {
         databaseClient.sql("INSERT INTO agences_voyage (agency_id, name, short_name, location, gare_routiere_id, version) VALUES (:id, 'Ag Test', 'AT', 'Loc', :gareId, 0)")
                 .bind("id", id)
                 .bind("gareId", gareId)
+                .then().block();
+        return id;
+    }
+
+    private UUID createTestAffiliation(UUID gareId, UUID agencyId) {
+        UUID id = UUID.randomUUID();
+        databaseClient.sql("INSERT INTO affiliation_agence_voyage (id, gare_routiere_id, agency_id, agency_name, statut, echeance, montant_affiliation, created_at, updated_at) VALUES (:id, :gareId, :agencyId, 'Ag Test', 'EN_ATTENTE', :echeance, 50000.0, :now, :now)")
+                .bind("id", id)
+                .bind("gareId", gareId)
+                .bind("agencyId", agencyId)
+                .bind("echeance", LocalDate.now().plusYears(1))
+                .bind("now", LocalDateTime.now())
                 .then().block();
         return id;
     }

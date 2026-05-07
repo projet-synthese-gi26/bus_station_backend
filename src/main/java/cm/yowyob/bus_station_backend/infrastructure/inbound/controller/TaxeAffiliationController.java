@@ -14,11 +14,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import cm.yowyob.bus_station_backend.application.dto.affiliation.AffiliationResponseDTO;
+import cm.yowyob.bus_station_backend.application.dto.affiliation.AffiliationStatutDTO;
 import cm.yowyob.bus_station_backend.application.dto.taxe.TaxeAffiliationAgenceResponseDTO;
 import cm.yowyob.bus_station_backend.application.dto.taxe.TaxeAffiliationCreateDTO;
 import cm.yowyob.bus_station_backend.application.dto.taxe.TaxeAffiliationResponseDTO;
 import cm.yowyob.bus_station_backend.application.dto.taxe.TaxeAffiliationUpdateDTO;
+import cm.yowyob.bus_station_backend.application.mapper.AffiliationMapper;
 import cm.yowyob.bus_station_backend.application.port.in.TaxeAffiliationUseCase;
+import cm.yowyob.bus_station_backend.application.service.AffiliationAgenceVoyageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -33,6 +37,8 @@ import reactor.core.publisher.Mono;
 public class TaxeAffiliationController {
 
     private final TaxeAffiliationUseCase taxeAffiliationUseCase;
+    private final AffiliationAgenceVoyageService affiliationAgenceVoyageService;
+    private final AffiliationMapper affiliationMapper;
 
     @Operation(summary = "Lister toutes les taxes d'une gare")
     @GetMapping("/gare/{gareId}")
@@ -72,6 +78,17 @@ public class TaxeAffiliationController {
             @PathVariable UUID id,
             @RequestBody TaxeAffiliationUpdateDTO dto) {
         return taxeAffiliationUseCase.update(id, dto).map(ResponseEntity::ok);
+    }
+
+    @Operation(summary = "Mettre à jour le statut d'une taxe d'affiliation (paiement)")
+    @PutMapping("/{id}/statut")
+    @PreAuthorize("hasRole('BUS_STATION_MANAGER')")
+    public Mono<ResponseEntity<AffiliationResponseDTO>> updateStatut(
+            @PathVariable UUID id,
+            @Valid @RequestBody AffiliationStatutDTO dto) {
+        return affiliationAgenceVoyageService.updateStatut(id, dto.getStatut())
+                .map(affiliationMapper::toResponseDTO)
+                .map(ResponseEntity::ok);
     }
 
     @Operation(summary = "Supprimer une taxe")
