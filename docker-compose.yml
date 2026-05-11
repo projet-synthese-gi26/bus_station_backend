@@ -92,6 +92,10 @@ services:
       DB_NAME: bus_station_db
       DB_USERNAME: root
       DB_PASSWORD: password
+      # Liquibase override (app_liquibase n'existe pas, on force root)
+      SPRING_LIQUIBASE_URL: jdbc:postgresql://postgres:5432/bus_station_db
+      SPRING_LIQUIBASE_USER: root
+      SPRING_LIQUIBASE_PASSWORD: password
       # Redis
       REDIS_HOST: redis
       REDIS_PORT: 7000
