@@ -149,17 +149,18 @@ public class VoyageService implements VoyageUseCase {
 
     @Override
     public Mono<Page<VoyagePreviewDTO>> getVoyagesByAgence(UUID agenceId, Pageable pageable) {
-        return voyagePersistencePort.findByAgenceId(agenceId, pageable)
-                .flatMap(v -> voyagePersistencePort.findLigneVoyageByVoyageId(v.getIdVoyage())
-                        .flatMap(ligne -> Mono.zip(
-                                agencePersistencePort.findById(ligne.getIdAgenceVoyage()),
-                                voyagePersistencePort.findClassVoyageById(ligne.getIdClassVoyage())).map(t -> {
-                                    VoyagePreviewDTO preview = voyageMapper.toPreviewDTO(v);
-                                    return voyageMapper.enrichPreviewDTO(preview, t.getT1(), t.getT2());
-                                })))
-                .collectList()
-                .zipWith(voyagePersistencePort.countVoyagesByAgenceId(agenceId))
-                .map(t -> (Page<VoyagePreviewDTO>) new PageImpl<>(t.getT1(), pageable, t.getT2()));
+        return agencePersistencePort.findById(agenceId)
+                .switchIfEmpty(Mono.error(new ResourceNotFoundException("Agence introuvable")))
+                .flatMap(agence -> voyagePersistencePort.findByAgenceId(agenceId, pageable)
+                        .flatMap(v -> voyagePersistencePort.findLigneVoyageByVoyageId(v.getIdVoyage())
+                                .flatMap(ligne -> voyagePersistencePort.findClassVoyageById(ligne.getIdClassVoyage())
+                                        .map(classVoyage -> {
+                                            VoyagePreviewDTO preview = voyageMapper.toPreviewDTO(v);
+                                            return voyageMapper.enrichPreviewDTO(preview, agence, classVoyage);
+                                        })))
+                        .collectList()
+                        .zipWith(voyagePersistencePort.countVoyagesByAgenceId(agenceId))
+                        .map(t -> (Page<VoyagePreviewDTO>) new PageImpl<>(t.getT1(), pageable, t.getT2())));
     }
 
     @Override

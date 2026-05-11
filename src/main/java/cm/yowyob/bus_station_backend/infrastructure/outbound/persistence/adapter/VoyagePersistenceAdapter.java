@@ -86,7 +86,7 @@ public class VoyagePersistenceAdapter implements VoyagePersistencePort {
     @Override
     public Mono<Long> countVoyagesByAgenceId(UUID agenceId) {
         return agenceId == null
-                ? voyageRepository.count()
+                ? voyageRepository.countAllWithLines()
                 : voyageRepository.countByAgenceId(agenceId);
     }
 

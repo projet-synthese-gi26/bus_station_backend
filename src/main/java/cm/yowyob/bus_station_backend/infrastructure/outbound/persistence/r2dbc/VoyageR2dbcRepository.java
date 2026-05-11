@@ -9,19 +9,24 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 public interface VoyageR2dbcRepository extends R2dbcRepository<VoyageEntity, UUID> {
     @Query("""
-        SELECT * FROM voyages
-        ORDER BY date_publication DESC
+        SELECT DISTINCT v.* FROM voyages v
+        JOIN lignes_voyage l ON l.id_voyage = v.id_voyage
+        ORDER BY v.date_publication DESC
         LIMIT :#{#pageable.pageSize} OFFSET :#{#pageable.offset}
     """)
     Flux<VoyageEntity> findAllPaged(Pageable pageable);
 
     @Query("""
-        SELECT * FROM voyages
-        WHERE id_agence_voyage = :agenceId
-        ORDER BY date_publication DESC
+        SELECT v.* FROM voyages v
+        JOIN lignes_voyage l ON l.id_voyage = v.id_voyage
+        WHERE l.id_agence_voyage = :agenceId
+        ORDER BY v.date_publication DESC
         LIMIT :#{#pageable.pageSize} OFFSET :#{#pageable.offset}
     """)
     Flux<VoyageEntity> findByAgenceIdPaged(UUID agenceId, Pageable pageable);
+
+    @Query("SELECT COUNT(DISTINCT v.id_voyage) FROM voyages v JOIN lignes_voyage l ON l.id_voyage = v.id_voyage")
+    Mono<Long> countAllWithLines();
 
     @Query("SELECT COUNT(*) FROM voyages v JOIN lignes_voyage l ON l.id_voyage = v.id_voyage WHERE l.id_agence_voyage = :agenceId")
     Mono<Long> countByAgenceId(UUID agenceId);
