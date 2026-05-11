@@ -174,6 +174,67 @@ class PlanningWorkflowIntegrationTest extends BaseIntegrationTest {
                 });
     }
 
+    @Test
+    @Order(3)
+    @DisplayName("Devrait permettre de créer deux plannings avec le même trajet pour la même agence")
+    void shouldAllowMultiplePlanningsWithSameTrajet() {
+        // Planning 1
+        CreneauPlanningDTO creneau1 = CreneauPlanningDTO.builder()
+                .jourSemaine(DayOfWeek.WEDNESDAY)
+                .heureDepart(LocalTime.of(8, 0))
+                .lieuDepart("Yaoundé")
+                .lieuArrive("Douala")
+                .idClassVoyage(classVoyageId)
+                .nbrPlacesDisponibles(50)
+                .actif(true)
+                .build();
+
+        PlanningVoyageDTO planning1 = PlanningVoyageDTO.builder()
+                .idAgenceVoyage(agenceId)
+                .nom("Matin")
+                .recurrence(RecurrenceType.HEBDOMADAIRE)
+                .dateDebut(LocalDate.now())
+                .creneaux(List.of(creneau1))
+                .build();
+
+        // Planning 2
+        CreneauPlanningDTO creneau2 = CreneauPlanningDTO.builder()
+                .jourSemaine(DayOfWeek.THURSDAY)
+                .heureDepart(LocalTime.of(14, 0))
+                .lieuDepart("Yaoundé")
+                .lieuArrive("Douala")
+                .idClassVoyage(classVoyageId)
+                .nbrPlacesDisponibles(50)
+                .actif(true)
+                .build();
+
+        PlanningVoyageDTO planning2 = PlanningVoyageDTO.builder()
+                .idAgenceVoyage(agenceId)
+                .nom("Après-midi")
+                .recurrence(RecurrenceType.HEBDOMADAIRE)
+                .dateDebut(LocalDate.now())
+                .creneaux(List.of(creneau2))
+                .build();
+
+        // Créer le premier
+        webTestClient.post()
+                .uri("/ligne-service")
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(planning1)
+                .exchange()
+                .expectStatus().isCreated();
+
+        // Créer le deuxième (même trajet)
+        webTestClient.post()
+                .uri("/ligne-service")
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(planning2)
+                .exchange()
+                .expectStatus().isCreated();
+    }
+
     // ===== Utilitaires =====
 
     private UUID createTestOrganization() {

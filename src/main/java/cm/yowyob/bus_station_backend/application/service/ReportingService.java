@@ -20,8 +20,11 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -124,7 +127,7 @@ public class ReportingService implements ReportingUseCase {
     private Mono<Map<String, Long>> getVoyagesStatsParStatut(UUID agenceId) {
         return voyagePort.findLignesVoyageByAgenceId(agenceId)
                 .flatMap(ligne -> voyagePort.findById(ligne.getIdVoyage()))
-                .filter(v -> v.getStatusVoyage() != null)
+                .filter(v -> v != null && v.getStatusVoyage() != null)
                 .collect(Collectors.groupingBy(v -> v.getStatusVoyage().name(), Collectors.counting()))
                 .map(map -> {
                     // S'assurer que tous les statuts sont présents
@@ -136,6 +139,7 @@ public class ReportingService implements ReportingUseCase {
     private Mono<Map<String, Long>> getReservationsStatsParStatut(UUID agenceId) {
         return voyagePort.findLignesVoyageByAgenceId(agenceId)
                 .flatMap(ligne -> reservationPort.findByVoyageId(ligne.getIdVoyage()))
+                .filter(r -> r != null && r.getStatutReservation() != null)
                 .collect(Collectors.groupingBy(r -> r.getStatutReservation().name(), Collectors.counting()))
                 .map(map -> {
                     for (StatutReservation s : StatutReservation.values()) map.putIfAbsent(s.name(), 0L);
@@ -146,25 +150,33 @@ public class ReportingService implements ReportingUseCase {
     private Mono<Double> calculateTauxOccupation(UUID agenceId) {
         return voyagePort.findLignesVoyageByAgenceId(agenceId)
                 .flatMap(ligne -> voyagePort.findById(ligne.getIdVoyage()))
+                .filter(Objects::nonNull)
                 .reduce(new double[]{0, 0}, (acc, v) -> {
                     acc[0] += (v.getNbrPlaceReservable() + v.getNbrPlaceReserve()); // Total places
                     acc[1] += v.getNbrPlaceReserve(); // Places prises
                     return acc;
                 })
-                .map(acc -> acc[0] > 0 ? (acc[1] / acc[0]) * 100 : 0.0);
+                .map(acc -> acc[0] > 0 ? (acc[1] / acc[0]) * 100 : 0.0)
+                .defaultIfEmpty(0.0);
     }
 
     private List<EvolutionData> calculateReservationEvolution(List<LocalDate> months, List<Reservation> data) {
+        if (data == null) return months.stream().map(m -> new EvolutionData(m, 0, 0.0)).toList();
         return months.stream().map(month -> {
-            long count = data.stream().filter(r -> isSameMonth(r.getDateReservation(), month)).count();
+            long count = data.stream()
+                    .filter(Objects::nonNull)
+                    .filter(r -> isSameMonth(r.getDateReservation(), month))
+                    .count();
             return new EvolutionData(month, count, 0.0);
         }).collect(Collectors.toList());
     }
 
     private List<EvolutionData> calculateRevenusEvolution(List<LocalDate> months, List<Reservation> data) {
+        if (data == null) return months.stream().map(m -> new EvolutionData(m, 0, 0.0)).toList();
         return months.stream().map(month -> {
             double total = data.stream()
-                    .filter(r -> (r.getStatutReservation() == StatutReservation.CONFIRMER || r.getStatutReservation() == StatutReservation.VALIDER))
+                    .filter(Objects::nonNull)
+                    .filter(r -> r.getStatutReservation() != null && (r.getStatutReservation() == StatutReservation.CONFIRMER || r.getStatutReservation() == StatutReservation.VALIDER))
                     .filter(r -> r.getDateConfirmation() != null && isSameMonth(r.getDateConfirmation(), month))
                     .mapToDouble(Reservation::getMontantPaye)
                     .sum();
@@ -173,8 +185,10 @@ public class ReportingService implements ReportingUseCase {
     }
 
     private List<EvolutionData> calculateVoyageEvolution(List<LocalDate> months, List<Voyage> data) {
+        if (data == null) return months.stream().map(m -> new EvolutionData(m, 0, 0.0)).toList();
         return months.stream().map(month -> {
             long count = data.stream()
+                    .filter(Objects::nonNull)
                     .filter(v -> v.getDatePublication() != null && isSameMonth(v.getDatePublication(), month))
                     .count();
             return new EvolutionData(month, count, 0.0);
@@ -182,10 +196,13 @@ public class ReportingService implements ReportingUseCase {
     }
 
     private List<EvolutionData> calculateUserEvolution(List<LocalDate> months, List<Reservation> data) {
+        if (data == null) return months.stream().map(m -> new EvolutionData(m, 0, 0.0)).toList();
         return months.stream().map(month -> {
             long uniqueUsers = data.stream()
+                    .filter(Objects::nonNull)
                     .filter(r -> isSameMonth(r.getDateReservation(), month))
                     .map(Reservation::getIdUser)
+                    .filter(Objects::nonNull)
                     .distinct()
                     .count();
             return new EvolutionData(month, uniqueUsers, 0.0);
@@ -193,12 +210,28 @@ public class ReportingService implements ReportingUseCase {
     }
 
     private boolean isSameMonth(Object dateObj, LocalDate targetMonth) {
-        if (dateObj == null) return false;
+        if (dateObj == null || targetMonth == null) return false;
+        
         LocalDate date;
         if (dateObj instanceof java.time.LocalDateTime) {
             date = ((java.time.LocalDateTime) dateObj).toLocalDate();
+        } else if (dateObj instanceof java.time.LocalDate) {
+            date = (java.time.LocalDate) dateObj;
+        } else if (dateObj instanceof java.time.OffsetDateTime) {
+            date = ((java.time.OffsetDateTime) dateObj).toLocalDate();
+        } else if (dateObj instanceof java.time.ZonedDateTime) {
+            date = ((java.time.ZonedDateTime) dateObj).toLocalDate();
+        } else if (dateObj instanceof java.time.Instant) {
+            date = ((java.time.Instant) dateObj).atZone(ZoneId.systemDefault()).toLocalDate();
         } else if (dateObj instanceof java.util.Date) {
-            date = ((java.util.Date) dateObj).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            // Pour java.sql.Date, toInstant() n'est pas supporté. On utilise une méthode plus sûre.
+            if (dateObj instanceof java.sql.Date) {
+                date = ((java.sql.Date) dateObj).toLocalDate();
+            } else if (dateObj instanceof java.sql.Timestamp) {
+                date = ((java.sql.Timestamp) dateObj).toLocalDateTime().toLocalDate();
+            } else {
+                date = ((java.util.Date) dateObj).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            }
         } else {
             return false;
         }

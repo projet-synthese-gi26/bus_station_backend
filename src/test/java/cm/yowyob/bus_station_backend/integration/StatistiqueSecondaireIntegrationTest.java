@@ -154,4 +154,55 @@ class StatistiqueSecondaireIntegrationTest extends BaseIntegrationTest {
                 .jsonPath("$.evolution").exists()
                 .jsonPath("$.general.revenus").isEqualTo(5000.0);
     }
+
+    @Test
+    @Order(6)
+    @DisplayName("Robustesse - Agence avec données corrompues")
+    void getStatistiquesWithBadData() {
+        UUID badAgencyId = UUID.randomUUID();
+        UUID badVoyageId = UUID.randomUUID();
+
+        // Agence sans nom
+        databaseClient.sql("INSERT INTO agences_voyage (agency_id, is_active) VALUES (:id, true)")
+                .bind("id", badAgencyId)
+                .then().block();
+
+        // Voyage avec dates nulles et statuts nuls
+        databaseClient.sql("INSERT INTO voyages (id_voyage, status_voyage) VALUES (:id, NULL)")
+                .bind("id", badVoyageId)
+                .then().block();
+
+        // Lien agence-voyage
+        databaseClient.sql("INSERT INTO lignes_voyage (id_ligne_voyage, id_voyage, id_agence_voyage) VALUES (:id, :voyId, :agenceId)")
+                .bind("id", UUID.randomUUID())
+                .bind("voyId", badVoyageId)
+                .bind("agenceId", badAgencyId)
+                .then().block();
+
+        // Réservation avec statut nul et date de confirmation nulle
+        databaseClient.sql("""
+                INSERT INTO reservations (id_reservation, id_voyage, id_user, statut_reservation, prix_total, montant_paye) 
+                VALUES (:id, :voyId, :userId, NULL, 5000.0, 5000.0)
+                """)
+                .bind("id", UUID.randomUUID())
+                .bind("voyId", badVoyageId)
+                .bind("userId", testUserId)
+                .then().block();
+
+        // Vérifier que l'appel ne retourne pas 500
+        authenticatedClient(adminToken).get()
+                .uri("/statistiques/agence/{id}/general", badAgencyId)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.nombreVoyages").isEqualTo(1)
+                .jsonPath("$.revenus").isEqualTo(0.0); // Car statut est nul, pas CONFIRMER
+
+        authenticatedClient(adminToken).get()
+                .uri("/statistiques/agence/{id}/evolution", badAgencyId)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.evolutionReservations").isArray();
+    }
 }

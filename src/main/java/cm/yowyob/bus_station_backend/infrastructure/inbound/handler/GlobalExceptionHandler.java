@@ -66,6 +66,7 @@ public class GlobalExceptionHandler {
         HttpStatus status = HttpStatus.resolve(ex.getStatusCode().value());
         if (status == null) {
             status = HttpStatus.INTERNAL_SERVER_ERROR;
+            log.error("ResponseStatusException with unknown status code: {}", ex.getStatusCode().value(), ex);
         }
         return Mono.just(
                 ResponseEntity
