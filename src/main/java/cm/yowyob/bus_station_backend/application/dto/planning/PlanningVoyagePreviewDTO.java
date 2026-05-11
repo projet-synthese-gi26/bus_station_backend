@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -36,4 +37,6 @@ public class PlanningVoyagePreviewDTO {
 
     @JsonProperty("nom_agence")
     private String nomAgence;
+
+    private List<CreneauPlanningDTO> creneaux;
 }

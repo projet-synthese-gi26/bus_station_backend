@@ -120,8 +120,8 @@ public class PlanningService implements PlanningUseCase {
                         .collectList()
                         .flatMap(creneaux -> agencePort.findById(planning.getIdAgenceVoyage())
                                 .map(agence -> planningMapper.toPreviewDTOWithAgence(
-                                        planning, creneaux.size(), agence))
-                                .defaultIfEmpty(planningMapper.toPreviewDTO(planning, creneaux.size()))));
+                                        planning, creneaux, agence))
+                                .defaultIfEmpty(planningMapper.toPreviewDTO(planning, creneaux))));
     }
 
     // ==================== CRUD Creneaux ====================
@@ -274,8 +274,8 @@ public class PlanningService implements PlanningUseCase {
                         .collectList()
                         .flatMap(creneaux -> agencePort.findById(planning.getIdAgenceVoyage())
                                 .map(agence -> planningMapper.toPreviewDTOWithAgence(
-                                        planning, creneaux.size(), agence))
-                                .defaultIfEmpty(planningMapper.toPreviewDTO(planning, creneaux.size()))));
+                                        planning, creneaux, agence))
+                                .defaultIfEmpty(planningMapper.toPreviewDTO(planning, creneaux))));
     }
 
     @Override

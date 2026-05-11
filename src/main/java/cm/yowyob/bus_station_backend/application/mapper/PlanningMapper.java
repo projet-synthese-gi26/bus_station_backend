@@ -51,6 +51,26 @@ public class PlanningMapper {
         return dto;
     }
 
+    public PlanningVoyagePreviewDTO toPreviewDTO(PlanningVoyage planning, List<CreneauPlanning> creneaux) {
+        return PlanningVoyagePreviewDTO.builder()
+                .idPlanning(planning.getIdPlanning())
+                .nom(planning.getNom())
+                .description(planning.getDescription())
+                .recurrence(planning.getRecurrence())
+                .statut(planning.getStatut())
+                .dateDebut(planning.getDateDebut())
+                .dateFin(planning.getDateFin())
+                .nombreCreneaux(creneaux != null ? creneaux.size() : 0)
+                .creneaux(creneaux != null ? creneaux.stream().map(this::toCreneauDTO).toList() : null)
+                .build();
+    }
+
+    public PlanningVoyagePreviewDTO toPreviewDTOWithAgence(PlanningVoyage planning, List<CreneauPlanning> creneaux, AgenceVoyage agence) {
+        PlanningVoyagePreviewDTO dto = toPreviewDTO(planning, creneaux);
+        dto.setNomAgence(agence != null ? agence.getLongName() : null);
+        return dto;
+    }
+
     public PlanningVoyagePreviewDTO toPreviewDTO(PlanningVoyage planning, int nombreCreneaux) {
         return PlanningVoyagePreviewDTO.builder()
                 .idPlanning(planning.getIdPlanning())
