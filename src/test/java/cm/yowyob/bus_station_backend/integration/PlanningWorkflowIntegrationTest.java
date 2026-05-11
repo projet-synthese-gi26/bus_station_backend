@@ -138,6 +138,42 @@ class PlanningWorkflowIntegrationTest extends BaseIntegrationTest {
                 .jsonPath("$.statusVoyage").isEqualTo("PUBLIE");
     }
 
+    @Test
+    @Order(2)
+    @DisplayName("Devrait créer un planning sans ID de véhicule (optionnel)")
+    void shouldCreatePlanningWithoutVehicule() {
+        CreneauPlanningDTO creneau = CreneauPlanningDTO.builder()
+                .jourSemaine(DayOfWeek.TUESDAY)
+                .heureDepart(LocalTime.of(10, 0))
+                .lieuDepart("Douala")
+                .lieuArrive("Kribi")
+                .idClassVoyage(classVoyageId)
+                // idVehicule est omis
+                .nbrPlacesDisponibles(30)
+                .actif(true)
+                .build();
+
+        PlanningVoyageDTO planningDTO = PlanningVoyageDTO.builder()
+                .idAgenceVoyage(agenceId)
+                .nom("Planning Sans Véhicule")
+                .recurrence(RecurrenceType.HEBDOMADAIRE)
+                .dateDebut(LocalDate.now())
+                .creneaux(List.of(creneau))
+                .build();
+
+        webTestClient.post()
+                .uri("/ligne-service")
+                .header("Authorization", "Bearer " + adminToken)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(planningDTO)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(PlanningVoyageDTO.class)
+                .value(res -> {
+                    assertThat(res.getCreneaux().get(0).getIdVehicule()).isNull();
+                });
+    }
+
     // ===== Utilitaires =====
 
     private UUID createTestOrganization() {

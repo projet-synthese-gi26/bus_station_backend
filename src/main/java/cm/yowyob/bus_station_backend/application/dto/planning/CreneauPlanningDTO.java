@@ -69,7 +69,6 @@ public class CreneauPlanningDTO {
     @JsonProperty("id_class_voyage")
     private UUID idClassVoyage;
 
-    @NotNull(message = "L'ID du véhicule est obligatoire")
     @JsonProperty("id_vehicule")
     private UUID idVehicule;
 
