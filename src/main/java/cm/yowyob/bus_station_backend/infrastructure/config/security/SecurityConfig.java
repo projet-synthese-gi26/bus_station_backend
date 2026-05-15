@@ -56,7 +56,7 @@ public class SecurityConfig {
                                 .pathMatchers("/agence").permitAll()
                                 .pathMatchers(HttpMethod.GET, "/agence/*/public").permitAll()
                                 .pathMatchers(HttpMethod.GET, "/organizations/*").permitAll()
-                                .pathMatchers(HttpMethod.GET, "/ligne-service/public/**").permitAll()
+                                .pathMatchers(HttpMethod.GET, "/ligne-service/public/**", "/ligne-service/agence/{agenceId}").permitAll()
                                 .pathMatchers(HttpMethod.GET, "/voyage", "/voyage/{id}",
                                         "/voyage/agence/**", "/voyage/gare/**",
                                         "/voyage/*/similaires", "/voyage/search")

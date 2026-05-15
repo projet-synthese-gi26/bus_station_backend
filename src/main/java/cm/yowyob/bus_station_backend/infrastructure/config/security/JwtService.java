@@ -26,7 +26,7 @@ public class JwtService {
     private final UserMapper userMapper;
 
     // Durées des tokens
-    public static final long ACCESS_TOKEN_VALIDITY_MS = 15 * 60 * 1000L;          // 15 minutes
+    public static final long ACCESS_TOKEN_VALIDITY_MS = 24 * 60 * 60 * 1000L;          // 24h
     public static final long REFRESH_TOKEN_VALIDITY_MS = 7 * 24 * 60 * 60 * 1000L; // 7 jours
 
     /**
